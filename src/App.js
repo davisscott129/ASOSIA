@@ -949,7 +949,10 @@ function FormulariosPage({ forms }) {
         : <div style={{ display: "grid", gap: 18 }}>
             {forms.map(f => (
               <div key={f.id} className="card-hover form-card" style={{ background: C.white, borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", display: "flex", gap: 20, alignItems: "center" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📋</div>
+               <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, position: "relative" }}>
+                📋
+                <span style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: C.orange, color: C.white, fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{forms.indexOf(f) + 1}</span>
+              </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 4px", fontWeight: 800 }}>{f.title}</h3>
                   <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: 0 }}>{f.description}</p>
@@ -1516,10 +1519,18 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
               <input style={{ ...inp, marginBottom: 16 }} placeholder="Descripción" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
               <button onClick={addForm} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar</button>
             </div>
-            {forms.map(x => (
-              <div key={x.id} style={{ background: C.white, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
-                <div><div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 14 }}>{x.title}</div><div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12 }}>{x.url}</div></div>
-                <button onClick={() => delForm(x.id)} style={{ background: C.red, color: C.white, border: "none", borderRadius: 6, padding: "7px 13px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 700 }}>Eliminar</button>
+{forms.map((x, i) => (
+              <div key={x.id} style={{ background: C.white, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, boxShadow: "0 1px 6px rgba(0,0,0,0.05)", gap: 10 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
+                  <button onClick={() => { if (i === 0) return; const f2 = [...forms]; [f2[i-1], f2[i]] = [f2[i], f2[i-1]]; setForms(f2); }} disabled={i === 0} style={{ background: i === 0 ? "#eee" : C.navy, color: C.white, border: "none", borderRadius: 5, width: 28, height: 24, cursor: i === 0 ? "default" : "pointer", fontSize: 12, fontWeight: 700 }}>▲</button>
+                  <button onClick={() => { if (i === forms.length - 1) return; const f2 = [...forms]; [f2[i], f2[i+1]] = [f2[i+1], f2[i]]; setForms(f2); }} disabled={i === forms.length - 1} style={{ background: i === forms.length - 1 ? "#eee" : C.navy, color: C.white, border: "none", borderRadius: 5, width: 28, height: 24, cursor: i === forms.length - 1 ? "default" : "pointer", fontSize: 12, fontWeight: 700 }}>▼</button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", background: C.orange, color: C.white, fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 13, flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 14 }}>{x.title}</div>
+                  <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12 }}>{x.url}</div>
+                </div>
+                <button onClick={() => delForm(x.id)} style={{ background: C.red, color: C.white, border: "none", borderRadius: 6, padding: "7px 13px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>Eliminar</button>
               </div>
             ))}
           </div>
