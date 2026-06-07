@@ -1106,13 +1106,7 @@ function UsersPanel({ superPassword, isSuperAdmin }) {
   );
 
   const add = () => {
-    if (!newUser.name || !newUser.password) return setErr("Nombre y contraseña son obligatorios.");
-    if (newUser.password === superPassword) return setErr("Esa contraseña no está permitida.");
-    if (users.some(u => u.name === newUser.name)) return setErr("Ya existe un usuario con ese nombre.");
-    setUsers([...users, { ...newUser, id: Date.now() }]);
-    setNewUser({ name: "", password: "" });
-    setErr("");
-  };
+
 
   const del = (id) => setUsers(users.filter(u => u.id !== id));
 
