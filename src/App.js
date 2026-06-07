@@ -1153,32 +1153,7 @@ function HeroEditModal({ hero, onSave, onClose }) {
     </div>
   );
 }
-// ── USERS PANEL ────────────────────────────────────────────────────────────
-function UsersPanel({ superPassword, isSuperAdmin }) {
-  const [users, setUsers] = useStore("admin_users", []);
-  const [newUser, setNewUser] = useState({ name: "", password: "" });
-  const [err, setErr] = useState("");
-  const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
 
-  if (!isSuperAdmin) return (
-    <div style={{ background: "#fff0f0", borderRadius: 16, padding: 32, textAlign: "center" }}>
-      <div style={{ fontSize: 32, marginBottom: 12 }}>🔒</div>
-      <p style={{ fontFamily: "Nunito, sans-serif", color: C.red, fontWeight: 700 }}>Acceso restringido al superadmin.</p>
-    </div>
-  );
-
-  const add = () => {
-    if (!newUser.name || !newUser.password) return setErr("Nombre y contraseña son obligatorios.");
-    if (newUser.password === superPassword) return setErr("Esa contraseña no está permitida.");
-    if (users.some(u => u.name === newUser.name)) return setErr("Ya existe un usuario con ese nombre.");
-    setUsers([...users, { ...newUser, id: Date.now() }]);
-    setNewUser({ name: "", password: "" });
-    setErr("");
-  };
-
-  const del = (id) => setUsers(users.filter(u => u.id !== id));
-
-  return (
     <div>
       <div style={{ background: "#fff", borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
         <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", fontWeight: 800 }}>👤 Usuarios con acceso al panel</h3>
