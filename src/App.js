@@ -1655,7 +1655,9 @@ function Footer({ social, onSecretClick }) {
     <footer style={{ background: C.dark, color: "rgba(255,255,255,0.55)", padding: "44px 24px 28px", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <BrandPattern opacity={0.04} colors={[C.orange, C.sky, C.red, C.cream]} variant={3} />
       <div style={{ position: "relative", zIndex: 1 }}>
-        <Logo size={32} dark />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+  <Logo size={48} dark />
+</div>
         <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, marginTop: 14, lineHeight: 1.7 }}>
           Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela<br />
           Universidad de Costa Rica · Junta Directiva 2026-2027
