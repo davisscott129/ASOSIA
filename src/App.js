@@ -1092,13 +1092,7 @@ function HeroEditModal({ hero, onSave, onClose }) {
   );
 }
 // ── USERS PANEL ────────────────────────────────────────────────────────────
-function UsersPanel({ superPassword }) {
-  const [users, setUsers] = useStore("admin_users", []);
-  const [newUser, setNewUser] = useState({ name: "", password: "" });
-  const [err, setErr] = useState("");
-  const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
-
-  function UsersPanel({ superPassword, isSuperAdmin }) {
+function UsersPanel({ superPassword, isSuperAdmin }) {
   const [users, setUsers] = useStore("admin_users", []);
   const [newUser, setNewUser] = useState({ name: "", password: "" });
   const [err, setErr] = useState("");
