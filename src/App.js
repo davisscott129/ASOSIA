@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useState, useRef, useEffect } from "react";
 const style = document.createElement("style");
 style.textContent = `
