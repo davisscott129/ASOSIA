@@ -295,22 +295,12 @@ function BrandPattern({ opacity = 0.12, colors = [C.orange, C.sky, C.red, C.crea
 
 // ── LOGO ───────────────────────────────────────────────────────────────────
 function Logo({ size = 44, dark = false }) {
-  const txtColor = dark ? C.white : C.dark;
-  const r = size * 0.22;
-  const cx = size * 0.52;
   return (
-    <svg width={size * 3.2} height={size} viewBox={`0 0 ${size * 3.2} ${size}`} xmlns="http://www.w3.org/2000/svg">
-      <circle cx={cx} cy={r + 2} r={r} fill={C.sky} />
-      <text x={cx} y={r + 7} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">🔧</text>
-      <circle cx={cx - r * 1.15} cy={r * 2.9} r={r} fill={C.red} />
-      <text x={cx - r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">✒️</text>
-      <circle cx={cx + r * 1.15} cy={r * 2.9} r={r} fill={C.orange} />
-      <text x={cx + r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">⚙️</text>
-      <text x={size * 1.18} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="800" fontSize={size * 0.42} fill={txtColor}>aso</text>
-      <text x={size * 1.18 + size * 0.42 * 1.82} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="900" fontSize={size * 0.44} fill={C.red}>S</text>
-      <text x={size * 1.18 + size * 0.42 * 1.82 + size * 0.27} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="900" fontSize={size * 0.44} fill={C.sky}>I</text>
-      <text x={size * 1.18 + size * 0.42 * 1.82 + size * 0.44} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="900" fontSize={size * 0.44} fill={C.orange}>A</text>
-    </svg>
+    <img
+      src="/sitio_web.png"
+      alt="asoSIA"
+      style={{ height: size, width: "auto", display: "block" }}
+    />
   );
 }
 
