@@ -1,5 +1,6 @@
-/* eslint-disable *
 import { useState, useRef, useEffect } from "react";
+import "./mobile.css";
+
 const style = document.createElement("style");
 style.textContent = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap');
@@ -18,6 +19,7 @@ style.textContent = `
   .nav-btn:hover { opacity: 0.88; transform: translateY(-1px); }
   .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.14) !important; }
+
 `;
 document.head.appendChild(style);
 
@@ -207,17 +209,18 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
   const tabs = ["Inicio","Noticias","Deportes","Actividades","Integrantes","Comisiones","Formularios","Merch"];
   return (
     <nav style={{ background: C.navy, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 20px rgba(0,0,0,0.35)" }}>
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 8 }}>
+      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 8 }}>
         <button onClick={() => setActive("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} dark />
         </button>
-        <div style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
           {tabs.map(t => (
             <button key={t} onClick={() => setActive(t)} className="nav-btn" style={{
               background: active === t ? C.orange : "transparent",
               color: active === t ? C.white : "rgba(255,255,255,0.78)",
               border: "none", borderRadius: 6, padding: "7px 11px", cursor: "pointer",
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, transition: "all 0.18s",
+              whiteSpace: "nowrap",
             }}>{t}</button>
           ))}
           {/* Admin button: only visible when already logged in */}
@@ -228,6 +231,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
               border: `1px solid ${C.orange}`,
               borderRadius: 6, padding: "7px 10px", cursor: "pointer",
               fontSize: 12, fontFamily: "Nunito, sans-serif", fontWeight: 700, transition: "all 0.18s",
+              whiteSpace: "nowrap",
             }}>✏️ Editor</button>
           )}
         </div>
@@ -252,7 +256,7 @@ function RecentFeed({ news, sports, activities, setActive }) {
   return (
     <div style={{ background: C.offwhite, padding: "60px 24px" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
+        <div className="recent-feed-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
           <div>
             <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 8, textTransform: "uppercase" }}>Lo más reciente</div>
             <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 30, color: C.navy, margin: 0, fontWeight: 900 }}>Últimas publicaciones</h2>
@@ -298,7 +302,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
     if (!hasImgs || hero.images.length < 2) return;
     const t = setInterval(() => setImgIdx(i => (i + 1) % hero.images.length), 5000);
     return () => clearInterval(t);
-  }, [hero.images]);
+  }, [hero.images, hasImgs]);
 
   return (
     <div>
@@ -324,7 +328,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.72)", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.75, fontFamily: "Nunito, sans-serif" }}>
             {hero.subtitle}
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="hero-cta" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={() => setActive("Noticias")} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 18px rgba(243,150,63,0.4)" }}>
               {hero.ctaLeft || "Últimas Noticias →"}
             </button>
@@ -350,7 +354,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       {/* ── STATS BAR ── */}
       <div style={{ background: C.cream, position: "relative", overflow: "hidden" }}>
         <BrandPattern opacity={0.07} colors={[C.orange, C.navy, C.red, C.sky]} variant={2} />
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
+        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
           {stats.map(s => (
             <div key={s.id} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 36, fontWeight: 900, color: C.navy }}>{s.value}</div>
@@ -364,7 +368,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
       {/* ── ABOUT ── */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
+      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
         <div>
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
@@ -396,7 +400,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
             <div style={{ color: C.cream, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>Conectate con nosotros</div>
             <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 30, color: C.white, margin: "0 0 32px", fontWeight: 900 }}>Seguinos en redes</h2>
-            <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+            <div className="social-buttons" style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
               {social.whatsapp && (
                 <a href={social.whatsapp} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "#25d366", color: C.white, borderRadius: 12, padding: "13px 24px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14 }}>
                   💬 WhatsApp
@@ -507,7 +511,7 @@ function ContentCard({ item, tagKey }) {
 
 function SectionPage({ title, subtitle, accent, items, tagKey, emptyMsg }) {
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px" }}>
+    <div className="section-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ color: accent, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>{subtitle}</div>
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.navy, margin: 0, fontWeight: 900 }}>{title}</h2>
@@ -585,7 +589,7 @@ function ComisionesPage({ commissions }) {
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.navy, margin: "0 0 12px", fontWeight: 900 }}>Comisiones de Trabajo</h2>
         <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 15 }}>Tocá una comisión para ver más detalles y cómo unirte.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
+      <div className="commissions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
         {commissions.map((c, i) => (
           <div key={c.id || i} onClick={() => setSelected(c)} className="card-hover" style={{ border: `2px solid ${c.color}22`, borderRadius: 16, overflow: "hidden", background: C.white, boxShadow: "0 2px 14px rgba(0,0,0,0.06)", cursor: "pointer" }}>
             <div style={{ background: c.color, padding: "24px 22px 18px", display: "flex", gap: 12, alignItems: "center", position: "relative", overflow: "hidden" }}>
@@ -753,7 +757,7 @@ function IntegrantesPage({ members }) {
         <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>Junta Directiva 2026-2027</div>
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.navy, margin: 0, fontWeight: 900 }}>Integrantes</h2>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 22, justifyItems: "center" }}>
+      <div className="members-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 22, justifyItems: "center" }}>
         {members.map((m, idx) => (
           <div key={m.id} className="card-hover" style={{ background: C.white, borderRadius: 16, overflow: "visible", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", textAlign: "center", width: "100%", maxWidth: 260, position: "relative" }}>
             {/* Banner */}
@@ -788,7 +792,7 @@ function FormulariosPage({ forms }) {
         ? <div style={{ textAlign: "center", color: "#aaa", fontFamily: "Nunito, sans-serif", fontSize: 16, padding: 60 }}>No hay formularios activos.</div>
         : <div style={{ display: "grid", gap: 18 }}>
             {forms.map(f => (
-              <div key={f.id} className="card-hover" style={{ background: C.white, borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", display: "flex", gap: 20, alignItems: "center" }}>
+              <div key={f.id} className="card-hover form-card" style={{ background: C.white, borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", display: "flex", gap: 20, alignItems: "center" }}>
                 <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📋</div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 4px", fontWeight: 800 }}>{f.title}</h3>
@@ -1003,7 +1007,6 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   const [newCom, setNewCom] = useState({ name: "", icon: "📋", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
 
   const photoRef = useRef();
-  const bannerRef = useRef();
   const newsImgRef = useRef();
   const merchImgRef = useRef();
   const comImgRef = useRef();
@@ -1044,7 +1047,6 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   const delMerch = id => setMerch(merch.filter(x => x.id !== id));
 
   const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0]); setMField(prev => ({ ...prev, photo: b64 })); };
-  const handleMemberBanner = async (files) => { const b64 = await fileToB64(files[0]); setMField(prev => ({ ...prev, banner: b64 })); };
   const handleMerchImg = async (files) => { const b64 = await fileToB64(files[0]); setMp(prev => ({ ...prev, image: b64 })); };
 
   const updateMember = () => {
@@ -1086,7 +1088,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
           <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: 0, fontSize: 26, fontWeight: 900 }}>✏️ Panel de Administración</h2>
           <button onClick={onLogout} style={{ background: C.red, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>Cerrar sesión</button>
         </div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
+        <div className="admin-tabs" style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
           {panelTabs.map(([k, l]) => (
             <button key={k} onClick={() => { setTab(k); resetF(); }} style={{ background: tab === k ? C.navy : C.white, color: tab === k ? C.white : C.navy, border: `2px solid ${tab === k ? C.navy : "#ddd"}`, borderRadius: 8, padding: "8px 16px", fontFamily: "Nunito, sans-serif", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>{l}</button>
           ))}
@@ -1097,12 +1099,12 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
           <div>
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar entrada</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Título *" value={f.title} onChange={e => setF({ ...f, title: e.target.value })} />
                 <input style={inp} type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} />
               </div>
               <textarea style={{ ...inp, minHeight: 70, resize: "vertical", marginBottom: 10 }} placeholder="Descripción / resumen" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Link externo (opcional)" value={f.link} onChange={e => setF({ ...f, link: e.target.value })} />
                 <div>
                   <select style={inp} value={tab === "news" ? f.category : f.tag} onChange={e => tab === "news" ? setF({ ...f, category: e.target.value }) : setF({ ...f, tag: e.target.value })}>
@@ -1144,13 +1146,13 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
             {/* Add new commission */}
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar Comisión</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Nombre de la comisión *" value={newCom.name} onChange={e => setNewCom({ ...newCom, name: e.target.value })} />
                 <input style={inp} placeholder="Ícono (emoji)" value={newCom.icon} onChange={e => setNewCom({ ...newCom, icon: e.target.value })} />
               </div>
               <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Descripción corta (visible en tarjeta)" value={newCom.desc} onChange={e => setNewCom({ ...newCom, desc: e.target.value })} />
               <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Detalle (visible al abrir la comisión)" value={newCom.detail} onChange={e => setNewCom({ ...newCom, detail: e.target.value })} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Email de contacto" value={newCom.contact} onChange={e => setNewCom({ ...newCom, contact: e.target.value })} />
                 <input style={inp} placeholder="WhatsApp (link grupo)" value={newCom.whatsapp} onChange={e => setNewCom({ ...newCom, whatsapp: e.target.value })} />
               </div>
@@ -1182,13 +1184,13 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
               </select>
               {selComId && (
                 <>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <input style={inp} placeholder="Nombre *" value={comField.name} onChange={e => setComField({ ...comField, name: e.target.value })} />
                     <input style={inp} placeholder="Ícono" value={comField.icon} onChange={e => setComField({ ...comField, icon: e.target.value })} />
                   </div>
                   <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Descripción corta" value={comField.desc} onChange={e => setComField({ ...comField, desc: e.target.value })} />
                   <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Detalle completo" value={comField.detail} onChange={e => setComField({ ...comField, detail: e.target.value })} />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <input style={inp} placeholder="Email" value={comField.contact} onChange={e => setComField({ ...comField, contact: e.target.value })} />
                     <input style={inp} placeholder="WhatsApp" value={comField.whatsapp} onChange={e => setComField({ ...comField, whatsapp: e.target.value })} />
                   </div>
@@ -1384,7 +1386,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
             </div>
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar Producto</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+              <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Nombre del producto *" value={mp.name} onChange={e => setMp({ ...mp, name: e.target.value })} />
                 <input style={inp} placeholder="Precio (₡)" value={mp.price} onChange={e => setMp({ ...mp, price: e.target.value })} />
               </div>
