@@ -23,6 +23,17 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+
+function useWindowWidth() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return width;
+}
+
 const C = {
   navy:     "#183e4e",
   sky:      "#5aadc4",
@@ -206,6 +217,7 @@ function Logo({ size = 44, dark = false }) {
 
 // ── NAV ────────────────────────────────────────────────────────────────────
 function Nav({ active, setActive, isAdmin, onAdminClick }) {
+  const isMobile = useWindowWidth() < 768;
   const tabs = ["Inicio","Noticias","Deportes","Actividades","Integrantes","Comisiones","Formularios","Merch"];
   return (
     <nav style={{ background: C.navy, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 20px rgba(0,0,0,0.35)" }}>
@@ -213,7 +225,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
         <button onClick={() => setActive("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} dark />
         </button>
-        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "nowrap", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+        <div style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: isMobile ? "nowrap" : "wrap", overflowX: isMobile ? "auto" : "visible", WebkitOverflowScrolling: "touch", scrollbarWidth: "none", maxWidth: isMobile ? "calc(100vw - 110px)" : "none" }}>
           {tabs.map(t => (
             <button key={t} onClick={() => setActive(t)} className="nav-btn" style={{
               background: active === t ? C.orange : "transparent",
@@ -295,6 +307,7 @@ function RecentFeed({ news, sports, activities, setActive }) {
 
 // ── HERO ───────────────────────────────────────────────────────────────────
 function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, news, sports, activities }) {
+  const isMobile = useWindowWidth() < 768;
   const [imgIdx, setImgIdx] = useState(0);
   const hasImgs = hero.images && hero.images.length > 0;
 
@@ -328,7 +341,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.72)", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.75, fontFamily: "Nunito, sans-serif" }}>
             {hero.subtitle}
           </p>
-          <div className="hero-cta" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
             <button onClick={() => setActive("Noticias")} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 18px rgba(243,150,63,0.4)" }}>
               {hero.ctaLeft || "Últimas Noticias →"}
             </button>
@@ -368,7 +381,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
       {/* ── ABOUT ── */}
-      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(32px,5vw,64px) 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: "clamp(24px,4vw,56px)", alignItems: "center" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "32px 16px" : "64px 24px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
         <div>
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
