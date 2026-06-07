@@ -388,7 +388,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#444", fontSize: 15, lineHeight: 1.8, marginBottom: 14 }}>{about.p1}</p>
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#444", fontSize: 15, lineHeight: 1.8 }}>{about.p2}</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           {[
             { title: "Misión", text: about.mision, bg: C.navy, fg: C.white },
             { title: "Visión", text: about.vision, bg: C.sky, fg: C.white },
