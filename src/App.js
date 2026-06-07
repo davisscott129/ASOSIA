@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./mobile.css";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB2O2-_Ftai3MXwG70EMZknTdu8DqMP8Dw",
@@ -58,7 +58,17 @@ const C = {
   dark:     "#111820",
 };
 
-const ADMIN_PASSWORD = "AURA/asoSIA2026";
+const SUPER_ADMIN_PASSWORD = "AURA/asoSIA2026";
+
+async function checkAdminPassword(pw) {
+  if (pw === SUPER_ADMIN_PASSWORD) return true;
+  try {
+    const snap = await getDoc(doc(db, "asosia", "admin_users"));
+    if (!snap.exists()) return false;
+    const users = snap.data().value || [];
+    return users.some(u => u.password === pw);
+  } catch { return false; }
+}
 
 function useStore(key, seed) {
   const [val, setVal] = useState(seed);
@@ -1015,8 +1025,15 @@ function MerchPage({ merch, merchEmptyText }) {
 
 // ── ADMIN MODAL ────────────────────────────────────────────────────────────
 function AdminModal({ onClose, onLogin }) {
-  const [pw, setPw] = useState(""); const [err, setErr] = useState(false);
-  const check = () => pw === ADMIN_PASSWORD ? (onLogin(), onClose()) : setErr(true);
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const check = async () => {
+    setLoading(true);
+    const ok = await checkAdminPassword(pw);
+    setLoading(false);
+    if (ok) { onLogin(); onClose(); } else setErr(true);
+  };
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 18, padding: 40, maxWidth: 360, width: "90%" }}>
@@ -1490,7 +1507,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
               {mp.image && <img src={mp.image} alt="" style={{ display: "block", width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} />}
               <button onClick={addMerch} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar Producto</button>
             </div>
-            {merch.map(p => (
+{merch.map(p => (
               <div key={p.id} style={{ background: C.white, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   {p.image && <img src={p.image} alt="" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }} />}
@@ -1504,11 +1521,16 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
             ))}
           </div>
         )}
+
+        {/* USUARIOS */}
+        {tab === "usuarios" && (
+          <UsersPanel superPassword={SUPER_ADMIN_PASSWORD} />
+        )}
+
       </div>
     </div>
   );
 }
-
 // ── FOOTER ─────────────────────────────────────────────────────────────────
 function Footer({ social, onSecretClick }) {
   const [clicks, setClicks] = useState(0);
