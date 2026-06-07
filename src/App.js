@@ -1032,7 +1032,7 @@ function AdminModal({ onClose, onLogin }) {
     setLoading(true);
     const ok = await checkAdminPassword(pw);
     setLoading(false);
-    if (ok) { onLogin(); onClose(); } else setErr(true);
+    if (ok) { onLogin(pw === SUPER_ADMIN_PASSWORD); onClose(); } else setErr(true);
   };
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1145,7 +1145,7 @@ function UsersPanel({ superPassword }) {
   );
 }
 // ── ADMIN PANEL ────────────────────────────────────────────────────────────
-function AdminPanel({ news, setNews, sports, setSports, activities, setActivities, forms, setForms, members, setMembers, merch, setMerch, commissions, setCommissions, stats, setStats, about, setAbout, social, setSocial, merchEmptyText, setMerchEmptyText, onLogout }) {
+function AdminPanel({ isSuperAdmin, news, setNews, sports, setSports, activities, setActivities, forms, setForms, members, setMembers, merch, setMerch, commissions, setCommissions, stats, setStats, about, setAbout, social, setSocial, merchEmptyText, setMerchEmptyText, onLogout }) {
   const [tab, setTab] = useState("news");
   const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
   const [f, setF] = useState({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [] });
@@ -1229,7 +1229,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
     ["news","📰 Noticias"],["sports","⚽ Deportes"],["activities","🎯 Actividades"],
     ["commissions","🏗️ Comisiones"],["forms","📋 Formularios"],["members","👥 Integrantes"],
     ["about","ℹ️ Quiénes Somos"],["stats","📊 Estadísticas"],["social","🌐 Redes"],["merch","🛍️ Merch"],
-    ["usuarios","👤 Usuarios"]
+    ...(isSuperAdmin ? [["usuarios","👤 Usuarios"]] : [])
   ];
 
   const colorOptions = [C.navy, C.sky, C.orange, C.red, "#7b5ea7", "#5a9a6f", "#c4a43e"];
@@ -1633,6 +1633,7 @@ function Footer({ social, onSecretClick }) {
 export default function App() {
   const [active, setActive]       = useState("Inicio");
   const [isAdmin, setIsAdmin]     = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showHeroEdit, setShowHeroEdit] = useState(false);
 
@@ -1657,6 +1658,7 @@ export default function App() {
       <>
         <Nav active="Editor" setActive={setActive} isAdmin={isAdmin} onAdminClick={handleAdminClick} />
         <AdminPanel
+          isSuperAdmin={isSuperAdmin}
           news={news} setNews={setNews}
           sports={sports} setSports={setSports}
           activities={activities} setActivities={setActivities}
@@ -1690,7 +1692,7 @@ export default function App() {
 
       <Footer social={social} onSecretClick={handleAdminClick} />
 
-      {showLogin    && <AdminModal onClose={() => setShowLogin(false)} onLogin={() => { setIsAdmin(true); setActive("Editor"); }} />}
+      {showLogin    && <AdminModal onClose={() => setShowLogin(false)} onLogin={(isSuper) => { setIsAdmin(true); setIsSuperAdmin(isSuper); setActive("Editor"); }} />}
       {showHeroEdit && <HeroEditModal hero={hero} onSave={setHero} onClose={() => setShowHeroEdit(false)} />}
     </div>
   );
