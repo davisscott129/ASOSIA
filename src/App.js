@@ -183,13 +183,13 @@ const SEED_STATS = [
 ];
 
 const SEED_ABOUT = {
-  p1: "ASOSIA es la Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela, fundada en febrero de 2007. Representamos a aproximadamente 690 estudiantes de Ingeniería Industrial, Ingeniería Mecánica y Diseño Gráfico.",
-  p2: "Tras dos años de inactividad, en marzo de 2026 una nueva junta directiva asumió el reto de reactivarla con más fuerza que nunca.",
+  p1: "ASOSIA (Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela) es la organización que representa y vela por los intereses de toda la comunidad estudiantil de la sede. Trabajamos para escuchar, apoyar y acompañar a los estudiantes, promoviendo espacios de participación, bienestar, integración y crecimiento.",
+  p2: "Como asociación, buscamos fortalecer la vida universitaria mediante actividades académicas, recreativas, deportivas y culturales, impulsando además proyectos que respondan a las necesidades e inquietudes del estudiantado. Nuestro compromiso es construir una comunidad más unida, participativa y con una identidad propia que refleje el espíritu de la Sede Interuniversitaria de Alajuela.",
   mision: "Velar por las necesidades de la comunidad estudiantil mediante representación y acompañamiento.",
   vision: "Construir una comunidad unida y orgullosa, con identidad propia que trascienda generaciones.",
   legado: "Ser recordados como la ASOSIA que devolvió la vida estudiantil a la sede.",
   valores: "Participación, integración, bienestar, innovación y representación genuina.",
-};
+};;
 
 const SEED_SOCIAL = {
   whatsapp: "",
