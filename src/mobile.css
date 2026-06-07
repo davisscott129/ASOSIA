@@ -1,0 +1,88 @@
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav-tabs-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+    max-width: calc(100vw - 110px);
+  }
+  .nav-tabs-container::-webkit-scrollbar { display: none; }
+
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .stats-bar {
+    justify-content: center !important;
+  }
+  .stats-bar > div {
+    width: 50%;
+    padding: 10px 0;
+  }
+
+  .recent-feed-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .section-inner { padding: 40px 16px !important; }
+
+  .members-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .commissions-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .form-card a {
+    width: 100%;
+    text-align: center;
+  }
+
+  .hero-cta {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .hero-cta button {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .social-buttons {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .social-buttons a {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px;
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+
+  .admin-input-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .merch-empty { padding: 48px 20px !important; }
+}
+
+@media (max-width: 480px) {
+  .members-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
