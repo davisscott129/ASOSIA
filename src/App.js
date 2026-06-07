@@ -169,14 +169,14 @@ function fileToB64(file) {
 const SEED_HERO = {
   topLabel: "Sede Interuniversitaria de Alajuela",
   title: "La voz de los estudiantes de la SIA",
-  subtitle: "Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela — representando, apoyando y velando por los intereses de toda la comunidad estudiantil.",
+  subtitle: "Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela, representando, apoyando y velando por los intereses de toda la comunidad estudiantil.",
   ctaLeft: "Últimas Noticias →",
   ctaRight: "Ver Comisiones",
   images: [],
 };
 
 const SEED_STATS = [
-  { id: 1, value: "690+", label: "Estudiantes" },
+  { id: 1, value: "+690", label: "Estudiantes" },
   { id: 2, value: "3",    label: "Carreras" },
   { id: 3, value: "7",    label: "Comisiones" },
   { id: 4, value: "2026", label: "Reactivación" },
