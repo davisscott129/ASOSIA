@@ -145,21 +145,20 @@ async function resolveImages(items) {
     return resolved;
   }));
 }
-function fileToB64(file) {
+function fileToB64(file, maxSize = 1200, quality = 0.82) {
   return new Promise((res, rej) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 200;
       let w = img.width, h = img.height;
-      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      res(canvas.toDataURL("image/jpeg", 0.4));
+      res(canvas.toDataURL("image/jpeg", quality));
     };
     img.onerror = () => rej(new Error("Read failed"));
     img.src = url;
@@ -1208,7 +1207,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   };
   const delMerch = id => setMerch(merch.filter(x => x.id !== id));
 
-  const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0]); setMField(prev => ({ ...prev, photo: b64 })); };
+  const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0], 600, 0.78); setMField(prev => ({ ...prev, photo: b64 })); };
   const handleMerchImg = async (files) => { const b64 = await fileToB64(files[0]); setMp(prev => ({ ...prev, image: b64 })); };
 
   const updateMember = () => {
