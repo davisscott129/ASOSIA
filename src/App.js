@@ -1,6 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import "./mobile.css";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, onSnapshot, setDoc } from "firebase/firestore";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyB2O2-_Ftai3MXwG70EMZknTdu8DqMP8Dw",
+  authDomain: "asosia-95b5e.firebaseapp.com",
+  projectId: "asosia-95b5e",
+  storageBucket: "asosia-95b5e.firebasestorage.app",
+  messagingSenderId: "938102238989",
+  appId: "1:938102238989:web:3ebd0edb2e2dd436c5ca44"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 const style = document.createElement("style");
 style.textContent = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap');
@@ -48,10 +61,26 @@ const C = {
 const ADMIN_PASSWORD = "AURA/asoSIA2026";
 
 function useStore(key, seed) {
-  const [val, setVal] = useState(() => {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : seed; } catch { return seed; }
-  });
-  const update = (v) => { setVal(v); try { localStorage.setItem(key, JSON.stringify(v)); } catch {} };
+  const [val, setVal] = useState(seed);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "asosia", key), (snap) => {
+      if (snap.exists()) {
+        setVal(snap.data().value);
+      } else {
+        setVal(seed);
+      }
+      setLoaded(true);
+    });
+    return () => unsub();
+  }, [key]);
+
+  const update = async (v) => {
+    setVal(v);
+    await setDoc(doc(db, "asosia", key), { value: v });
+  };
+
   return [val, update];
 }
 
