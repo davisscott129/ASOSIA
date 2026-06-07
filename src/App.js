@@ -155,21 +155,21 @@ function fileToB64(file) {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 300;
+      const MAX = 200;
       let w = img.width, h = img.height;
-      if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
-      else if (h > MAX) { w = w * MAX / h; h = MAX; }
+      if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
       const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
+      canvas.width = w;
+      canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      res(canvas.toDataURL("image/jpeg", 0.7));
+      res(canvas.toDataURL("image/jpeg", 0.4));
     };
     img.onerror = () => rej(new Error("Read failed"));
     img.src = url;
   });
 }
-
 // ── SEED DATA ──────────────────────────────────────────────────────────────
 const SEED_HERO = {
   topLabel: "Sede Interuniversitaria de Alajuela",
