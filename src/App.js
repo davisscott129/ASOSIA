@@ -99,7 +99,7 @@ function fileToB64(file) {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const MAX = 600;
+      const MAX = 300;
       let w = img.width, h = img.height;
       if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
       else if (h > MAX) { w = w * MAX / h; h = MAX; }
@@ -214,7 +214,7 @@ function BrandPattern({ opacity = 0.12, colors = [C.orange, C.sky, C.red, C.crea
       {[0,1,2,3,4,5,6,7].map(i => (
         <line key={i} x1={i * 200 - 200} y1={0} x2={i * 200 + 200} y2={600} stroke={colors[i % 4]} strokeWidth="40" opacity={opacity * 0.5} className={i % 2 === 0 ? "hero-pattern-anim" : "hero-pattern-anim2"} />
       ))}
-      <circle cx="300" cy="100" r="50" fill={colors[2]} opacity={opacity * 0.7} className="hero-pattern-anim3" />
+      <circle cx="300" cy="100" r="50" fill={colors[2]} opacity={opacity * 0.5} className="hero-pattern-anim3" />
       <circle cx="900" cy="500" r="70" fill={colors[1]} opacity={opacity * 0.5} className="hero-pattern-anim4" />
     </svg>
   );
