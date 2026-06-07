@@ -1733,7 +1733,7 @@ export default function App() {
           about={about} setAbout={setAbout}
           social={social} setSocial={setSocial}
           merchEmptyText={merchEmptyText} setMerchEmptyText={setMerchEmptyText}
-          onLogout={() => { setIsAdmin(false); setIsSuperAdmin(false); setActive("Inicio"); }}
+          onLogout={() => { setIsAdmin(false); setActive("Inicio"); }}
         />
         <Footer social={social} onSecretClick={handleAdminClick} />
       </>
@@ -1755,9 +1755,8 @@ export default function App() {
 
       <Footer social={social} onSecretClick={handleAdminClick} />
 
-      {showLogin    && <AdminModal onClose={() => setShowLogin(false)} onLogin={() => { setIsAdmin(true); setActive("Editor"); }}
-      
-      {showHeroEdit && <HeroEditModal hero={hero} onSave={setHero} onClose={() => setShowHeroEdit(false)} />}
+     {showLogin && <AdminModal onClose={() => setShowLogin(false)} onLogin={() => { setIsAdmin(true); setActive("Editor"); }} />}
+{showHeroEdit && <HeroEditModal hero={hero} onSave={setHero} onClose={() => setShowHeroEdit(false)} />}
     </div>
   );
 }
