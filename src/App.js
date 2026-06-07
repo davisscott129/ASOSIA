@@ -58,7 +58,7 @@ const C = {
   dark:     "#111820",
 };
 
-const SUPER_ADMIN_PASSWORD = process.env.REACT_APP_SUPER_ADMIN_PASSWORD;
+const SUPER_ADMIN_PASSWORD = "ArbolManzana1292006$$%%Davisscott";
 
 async function checkAdminPassword(pw) {
   if (pw === SUPER_ADMIN_PASSWORD) return true;
