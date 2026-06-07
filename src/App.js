@@ -198,8 +198,8 @@ const SEED_SOCIAL = {
 };
 
 const SEED_NEWS = [
-  { id: 1, title: "ASOSIA se reactiva oficialmente en marzo de 2026", date: "2026-03-10", excerpt: "Después de dos años de inactividad, una nueva junta directiva asumió el reto de reactivar la asociación estudiantil.", images: [], link: "", category: "Institucional" },
-  { id: 2, title: "Primer torneo de fútbol del año", date: "2026-04-02", excerpt: "La Comisión de Deportes invita a todos los estudiantes a inscribirse al torneo interfacultades.", images: [], link: "", category: "Deportes" },
+{ id: 1, title: "ASOSIA se reactiva oficialmente en marzo de 2026", date: "2026-03-10", excerpt: "Después de dos años de inactividad, una nueva junta directiva asumió el reto de reactivar la asociación estudiantil.", images: [], link: "", category: "Institucional", showFormBtn: false },
+  { id: 2, title: "Primer torneo de fútbol del año", date: "2026-04-02", excerpt: "La Comisión de Deportes invita a todos los estudiantes a inscribirse al torneo interfacultades.", images: [], link: "", category: "Deportes", showFormBtn: false },
 ];
 
 const SEED_SPORTS = [
@@ -583,7 +583,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
 }
 
 // ── DETAIL MODAL ───────────────────────────────────────────────────────────
-function DetailModal({ item, tagKey, onClose }) {
+function DetailModal({ item, tagKey, onClose, setActive }) {
   const [imgIdx, setImgIdx] = useState(0);
   const tag = item[tagKey] || item.category || "";
   const hasImgs = item.images && item.images.length > 0;
@@ -612,8 +612,11 @@ function DetailModal({ item, tagKey, onClose }) {
           <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12, marginBottom: 8, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 22, margin: "0 0 14px", fontWeight: 900, lineHeight: 1.25 }}>{item.title}</h2>
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#555", fontSize: 15, lineHeight: 1.8, margin: "0 0 20px" }}>{item.excerpt}</p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {item.link && <a href={item.link} target="_blank" rel="noreferrer" style={{ background: C.orange, color: C.white, borderRadius: 8, padding: "10px 22px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14 }}>Ver más →</a>}
+            {item.showFormBtn && setActive && (
+              <button onClick={() => { onClose(); setActive("Formularios"); }} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "10px 22px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>📋 Ver Formularios →</button>
+            )}
             <button onClick={onClose} style={{ background: "transparent", border: "2px solid #ddd", borderRadius: 8, padding: "10px 20px", fontFamily: "Nunito, sans-serif", fontWeight: 700, color: "#888", cursor: "pointer", fontSize: 14 }}>Cerrar</button>
           </div>
         </div>
@@ -623,7 +626,7 @@ function DetailModal({ item, tagKey, onClose }) {
 }
 
 // ── CONTENT CARD ───────────────────────────────────────────────────────────
-function ContentCard({ item, tagKey }) {
+function ContentCard({ item, tagKey, setActive }) {
   const [imgIdx, setImgIdx] = useState(0);
   const [open, setOpen] = useState(false);
   const hasImgs = item.images && item.images.length > 0;
@@ -657,12 +660,12 @@ function ContentCard({ item, tagKey }) {
         <span style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.sky, fontWeight: 700, cursor: "pointer" }}>Abrir nota {item.images?.length > 0 ? `· ${item.images.length} foto${item.images.length > 1 ? "s" : ""}` : ""} →</span>
       </div>
     </div>
-    {open && <DetailModal item={item} tagKey={tagKey} onClose={() => setOpen(false)} />}
+    {open && <DetailModal item={item} tagKey={tagKey} onClose={() => setOpen(false)} setActive={setActive} />}
     </>
   );
 }
 
-function SectionPage({ title, subtitle, accent, items, tagKey, emptyMsg }) {
+function SectionPage({ title, subtitle, accent, items, tagKey, emptyMsg, setActive }) {
   return (
     <div className="section-inner" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -672,7 +675,7 @@ function SectionPage({ title, subtitle, accent, items, tagKey, emptyMsg }) {
       {items.length === 0
         ? <div style={{ textAlign: "center", color: "#aaa", fontFamily: "Nunito, sans-serif", fontSize: 16, padding: 60 }}>{emptyMsg}</div>
         : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 26 }}>
-            {[...items].sort((a, b) => new Date(b.date) - new Date(a.date)).map(item => <ContentCard key={item.id} item={item} tagKey={tagKey} />)}
+            {[...items].sort((a, b) => new Date(b.date) - new Date(a.date)).map(item => <ContentCard key={item.id} item={item} tagKey={tagKey} setActive={setActive} />)}
           </div>
       }
     </div>
@@ -1195,7 +1198,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   const [tab, setTab] = useState("news");
   const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
   const [f, setF] = useState({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [] });
-  const resetF = () => setF({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [] });
+  const resetF = () => setF({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [], showFormBtn: false });
   const [selMember, setSelMember] = useState(null);
   const [mField, setMField] = useState({ photo: "", career: "" });
   const [mp, setMp] = useState({ name: "", price: "", desc: "", image: "", link: "", isPreorder: false, deadline: "" });
@@ -1225,7 +1228,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
     const tagField = cur?.tagField || "category";
     let tagVal = tab === "news" ? f.category : f.tag;
     if (tab === "sports" && tagVal === "Otro" && f.customTag) tagVal = f.customTag;
-    cur.setItems([...cur.items, { id: Date.now(), title: f.title, date: f.date, excerpt: f.excerpt, link: f.link, images: f.images, [tagField]: tagVal }]);
+    cur.setItems([...cur.items, { id: Date.now(), title: f.title, date: f.date, excerpt: f.excerpt, link: f.link, images: f.images, [tagField]: tagVal, showFormBtn: f.showFormBtn || false }]);
     resetF();
   };
   const delItem = id => cur.setItems(cur.items.filter(i => i.id !== id));
@@ -1315,6 +1318,10 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                 </div>
               </div>
               <input ref={newsImgRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => addItemImgs(e.target.files)} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <input type="checkbox" id="formBtn-chk" checked={f.showFormBtn || false} onChange={e => setF({ ...f, showFormBtn: e.target.checked })} style={{ width: 18, height: 18, cursor: "pointer" }} />
+                <label htmlFor="formBtn-chk" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14, color: C.navy, cursor: "pointer" }}>📋 Mostrar botón "Ver Formularios"</label>
+              </div>
               <button onClick={() => newsImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 10 }}>📷 Agregar imágenes</button>
               {f.images.map((img, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
@@ -1722,9 +1729,9 @@ export default function App() {
       <Nav active={navActive} setActive={setActive} isAdmin={isAdmin} onAdminClick={handleAdminClick} />
 
       {active === "Inicio"      && <HeroPage hero={hero} stats={stats} about={about} social={social} setActive={setActive} isAdmin={isAdmin} onEditHero={() => setShowHeroEdit(true)} news={news} sports={sports} activities={activities} />}
-      {active === "Noticias"    && <SectionPage title="Noticias" subtitle="Últimas Noticias" accent={C.red} items={news} tagKey="category" emptyMsg="No hay noticias aún." />}
-      {active === "Deportes"    && <SectionPage title="Deportes" subtitle="Comisión de Deportes" accent={C.orange} items={sports} tagKey="tag" emptyMsg="No hay eventos deportivos aún." />}
-      {active === "Actividades" && <SectionPage title="Actividades" subtitle="Eventos y Actividades" accent={C.sky} items={activities} tagKey="tag" emptyMsg="No hay actividades publicadas aún." />}
+     {active === "Noticias"    && <SectionPage title="Noticias" subtitle="Últimas Noticias" accent={C.red} items={news} tagKey="category" emptyMsg="No hay noticias aún." setActive={setActive} />}
+      {active === "Deportes"    && <SectionPage title="Deportes" subtitle="Comisión de Deportes" accent={C.orange} items={sports} tagKey="tag" emptyMsg="No hay eventos deportivos aún." setActive={setActive} />}
+      {active === "Actividades" && <SectionPage title="Actividades" subtitle="Eventos y Actividades" accent={C.sky} items={activities} tagKey="tag" emptyMsg="No hay actividades publicadas aún." setActive={setActive} />}
       {active === "Integrantes" && <IntegrantesPage members={members} />}
       {active === "Comisiones"  && <ComisionesPage commissions={commissions} />}
       {active === "Formularios" && <FormulariosPage forms={forms} />}
