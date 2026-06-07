@@ -58,7 +58,7 @@ const C = {
   dark:     "#111820",
 };
 
-const SUPER_ADMIN_PASSWORD = "AURA/asoSIA2026";
+const SUPER_ADMIN_PASSWORD = "ArbolManzana1292006";
 
 async function checkAdminPassword(pw) {
   if (pw === SUPER_ADMIN_PASSWORD) return true;
