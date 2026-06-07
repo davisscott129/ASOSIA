@@ -72,28 +72,84 @@ async function checkAdminPassword(pw) {
 
 function useStore(key, seed) {
   const [val, setVal] = useState(seed);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "asosia", key), (snap) => {
-      if (snap.exists()) {
-        setVal(snap.data().value);
-      } else {
+     if (snap.exists()) {
+  const data = snap.data().value;
+  if (Array.isArray(data)) {
+    resolveImages(data).then(setVal);
+  } else {
+    setVal(data);
+  }
+} else {
         setVal(seed);
       }
-      setLoaded(true);
     });
     return () => unsub();
   }, [key]);
 
   const update = async (v) => {
-    setVal(v);
-    await setDoc(doc(db, "asosia", key), { value: v });
+    // Si es un array, separar las imágenes en documentos aparte
+    if (Array.isArray(v)) {
+      const clean = await Promise.all(v.map(async (item) => {
+        const itemClean = { ...item };
+        // Guardar imagen del item en documento separado
+        if (item.image && item.image.startsWith("data:")) {
+          await setDoc(doc(db, "asosia_images", `${key}_${item.id}_image`), { value: item.image });
+          itemClean.image = `REF:${key}_${item.id}_image`;
+        }
+        if (item.photo && item.photo.startsWith("data:")) {
+          await setDoc(doc(db, "asosia_images", `${key}_${item.id}_photo`), { value: item.photo });
+          itemClean.photo = `REF:${key}_${item.id}_photo`;
+        }
+        if (item.images && item.images.length > 0) {
+          const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
+            if (img.startsWith("data:")) {
+              const imgKey = `${key}_${item.id}_img_${idx}`;
+              await setDoc(doc(db, "asosia_images", imgKey), { value: img });
+              return `REF:${imgKey}`;
+            }
+            return img;
+          }));
+          itemClean.images = imgRefs;
+        }
+        return itemClean;
+      }));
+      setVal(v);
+      await setDoc(doc(db, "asosia", key), { value: clean });
+    } else {
+      setVal(v);
+      await setDoc(doc(db, "asosia", key), { value: v });
+    }
   };
 
   return [val, update];
 }
-
+async function resolveImages(items) {
+  if (!Array.isArray(items)) return items;
+  return Promise.all(items.map(async (item) => {
+    const resolved = { ...item };
+    if (item.image && item.image.startsWith("REF:")) {
+      const snap = await getDoc(doc(db, "asosia_images", item.image.slice(4)));
+      resolved.image = snap.exists() ? snap.data().value : "";
+    }
+    if (item.photo && item.photo.startsWith("REF:")) {
+      const snap = await getDoc(doc(db, "asosia_images", item.photo.slice(4)));
+      resolved.photo = snap.exists() ? snap.data().value : "";
+    }
+    if (item.images && item.images.length > 0) {
+      resolved.images = await Promise.all(item.images.map(async (img) => {
+        if (img.startsWith("REF:")) {
+          const snap = await getDoc(doc(db, "asosia_images", img.slice(4)));
+          return snap.exists() ? snap.data().value : "";
+        }
+        return img;
+      }));
+    }
+    return resolved;
+  }));
+}
 function fileToB64(file) {
   return new Promise((res, rej) => {
     const img = new Image();
