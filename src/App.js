@@ -213,7 +213,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
         <button onClick={() => setActive("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} dark />
         </button>
-        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "nowrap", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
           {tabs.map(t => (
             <button key={t} onClick={() => setActive(t)} className="nav-btn" style={{
               background: active === t ? C.orange : "transparent",
@@ -354,7 +354,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       {/* ── STATS BAR ── */}
       <div style={{ background: C.cream, position: "relative", overflow: "hidden" }}>
         <BrandPattern opacity={0.07} colors={[C.orange, C.navy, C.red, C.sky]} variant={2} />
-        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
+        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
           {stats.map(s => (
             <div key={s.id} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 36, fontWeight: 900, color: C.navy }}>{s.value}</div>
@@ -368,7 +368,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
       {/* ── ABOUT ── */}
-      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
+      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(32px,5vw,64px) 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))", gap: "clamp(24px,4vw,56px)", alignItems: "center" }}>
         <div>
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
