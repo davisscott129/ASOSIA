@@ -1020,7 +1020,7 @@ function MerchModal({ p, onClose }) {
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 20, maxWidth: 480, width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         {p.image
-          ? <img src={p.image} alt={p.name} style={{ width: "100%", maxHeight: 300, objectFit: "cover", borderRadius: "20px 20px 0 0", display: "block" }} />
+          ? <img src={p.image} alt={p.name} style={{ width: "100%", objectFit: "contain", borderRadius: "20px 20px 0 0", display: "block", background: "#000" }} />
           : <div style={{ height: 160, borderRadius: "20px 20px 0 0", overflow: "hidden" }}><MerchBg idx={0} /></div>
         }
         <div style={{ padding: "24px 28px 28px" }}>
