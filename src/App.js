@@ -215,12 +215,12 @@ const SEED_ACTIVITIES = [
 
 const SEED_MEMBERS = [
   { id: 1, name: "Keilor Hernández",  role: "Presidencia",     photo: "", banner: "", career: "Ingeniería Industrial" },
-  { id: 2, name: "Maybelle Grainger", role: "Vicepresidencia", photo: "", banner: "", career: "Diseño Gráfico" },
+  { id: 2, name: "Maybelle Grainger", role: "Vicepresidencia", photo: "", banner: "", career: "Ingeniería Industrial" },
   { id: 3, name: "Matías Hernández",  role: "Tesorería",       photo: "", banner: "", career: "Ingeniería Industrial" },
-  { id: 4, name: "David Valdivia",    role: "Secretaría",      photo: "", banner: "", career: "Ingeniería Mecánica" },
+  { id: 4, name: "David Valdivia",    role: "Secretaría",      photo: "", banner: "", career: "Ingeniería Industrial" },
   { id: 5, name: "Katherine Fajardo", role: "Vocalía I",       photo: "", banner: "", career: "Ingeniería Industrial" },
-  { id: 6, name: "Ryan Chavarría",    role: "Vocalía II",      photo: "", banner: "", career: "Ingeniería Mecánica" },
-  { id: 7, name: "Dereck Mora",       role: "Suplencia",       photo: "", banner: "", career: "Diseño Gráfico" },
+  { id: 6, name: "Ryan Chavarría",    role: "Vocalía II",      photo: "", banner: "", career: "Ingeniería Industrial" },
+  { id: 7, name: "Dereck Mora",       role: "Suplencia",       photo: "", banner: "", career: "Ingeniería Industrial" },
 ];
 
 const SEED_MERCH_TEXT = {
