@@ -989,7 +989,61 @@ function CountdownTimer({ deadline }) {
     </div>
   );
 }
-
+function MerchCard({ p, idx }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div className="card-hover" onClick={() => setOpen(true)} style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", position: "relative", cursor: "pointer" }}>
+        {p.isPreorder && (
+          <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2, background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, color: C.white, borderRadius: 10, padding: "4px 11px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11 }}>🎫 PRE-VENTA</div>
+        )}
+        {p.image
+          ? <img src={p.image} alt={p.name} style={{ width: "100%", height: 200, objectFit: "cover" }} />
+          : <div style={{ height: 200, overflow: "hidden" }}><MerchBg idx={idx} /></div>
+        }
+        <div style={{ padding: "18px 20px 22px" }}>
+          <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 6px", fontWeight: 800 }}>{p.name}</h3>
+          <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: "0 0 8px" }}>{p.desc}</p>
+          {p.isPreorder && p.deadline && <CountdownTimer deadline={p.deadline} />}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+            <span style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 20, color: C.orange }}>₡{p.price}</span>
+            <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.sky, fontWeight: 700 }}>Ver detalle →</span>
+          </div>
+        </div>
+      </div>
+      {open && <MerchModal p={p} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+function MerchModal({ p, onClose }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 20, maxWidth: 480, width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        {p.image
+          ? <img src={p.image} alt={p.name} style={{ width: "100%", maxHeight: 300, objectFit: "cover", borderRadius: "20px 20px 0 0", display: "block" }} />
+          : <div style={{ height: 160, borderRadius: "20px 20px 0 0", overflow: "hidden" }}><MerchBg idx={0} /></div>
+        }
+        <div style={{ padding: "24px 28px 28px" }}>
+          {p.isPreorder && (
+            <div style={{ display: "inline-block", background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, color: C.white, borderRadius: 10, padding: "4px 14px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, marginBottom: 12 }}>🎫 PRE-VENTA</div>
+          )}
+          <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 22, margin: "0 0 8px", fontWeight: 900 }}>{p.name}</h2>
+          <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 24, color: C.orange, marginBottom: 12 }}>₡{p.price}</div>
+          {p.desc && <p style={{ fontFamily: "Nunito, sans-serif", color: "#555", fontSize: 15, lineHeight: 1.8, margin: "0 0 16px" }}>{p.desc}</p>}
+          {p.isPreorder && p.deadline && <CountdownTimer deadline={p.deadline} />}
+          <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap" }}>
+            {p.link && (
+              <a href={p.link} target="_blank" rel="noreferrer" style={{ background: p.isPreorder ? `linear-gradient(90deg, ${C.red}, ${C.orange})` : C.navy, color: C.white, borderRadius: 10, padding: "12px 26px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 15 }}>
+                {p.isPreorder ? "🎫 Reservar →" : "🛒 Pedir →"}
+              </a>
+            )}
+            <button onClick={onClose} style={{ background: "transparent", border: "2px solid #ddd", borderRadius: 10, padding: "12px 20px", fontFamily: "Nunito, sans-serif", fontWeight: 700, color: "#888", cursor: "pointer", fontSize: 14 }}>Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function MerchPage({ merch, merchEmptyText }) {
   const txt = merchEmptyText || SEED_MERCH_TEXT;
   if (merch.length === 0) return (
@@ -1056,26 +1110,9 @@ function MerchPage({ merch, merchEmptyText }) {
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>Tienda Oficial</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.white, margin: 0, fontWeight: 900 }}>Merch asoSIA</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
+ <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 24 }}>
           {merch.map(p => (
-            <div key={p.id} className="card-hover" style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", position: "relative" }}>
-              {p.isPreorder && (
-                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2, background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, color: C.white, borderRadius: 10, padding: "4px 11px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>🎫 PRE-VENTA</div>
-              )}
-              {p.image
-                ? <img src={p.image} alt={p.name} style={{ width: "100%", height: 200, objectFit: "cover" }} />
-                : <div style={{ height: 200, overflow: "hidden" }}><MerchBg idx={merch.indexOf(p)} /></div>
-              }
-              <div style={{ padding: "18px 20px 22px" }}>
-                <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 6px", fontWeight: 800 }}>{p.name}</h3>
-                <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: "0 0 8px" }}>{p.desc}</p>
-                {p.isPreorder && p.deadline && <CountdownTimer deadline={p.deadline} />}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                  <span style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 20, color: C.orange }}>₡{p.price}</span>
-                  {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={{ background: p.isPreorder ? `linear-gradient(90deg, ${C.red}, ${C.orange})` : C.navy, color: C.white, borderRadius: 8, padding: "9px 16px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>{p.isPreorder ? "Reservar →" : "Pedir →"}</a>}
-                </div>
-              </div>
-            </div>
+            <MerchCard key={p.id} p={p} idx={merch.indexOf(p)} />
           ))}
         </div>
       </div>
