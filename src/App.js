@@ -1,9 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
-import { getFirestore } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getStorage } from "firebase/storage";
 import "./mobile.css";
 
 const style = document.createElement("style");
@@ -51,79 +46,30 @@ const C = {
 };
 
 const ADMIN_PASSWORD = "AURA/asoSIA2026";
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
 
 function useStore(key, seed) {
   const [val, setVal] = useState(() => {
-    try {
-      const cached = localStorage.getItem(key);
-      return cached ? JSON.parse(cached) : seed;
-    } catch {
-      return seed;
-    }
+    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : seed; } catch { return seed; }
   });
-
-  useEffect(() => {
-    const refDoc = doc(db, "siteContent", key);
-
-    const unsubscribe = onSnapshot(
-      refDoc,
-      async (snap) => {
-        if (snap.exists()) {
-          const next = snap.data().value ?? seed;
-          setVal(next);
-          try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
-          return;
-        }
-
-        await setDoc(refDoc, { value: seed, updatedAt: Date.now() });
-        setVal(seed);
-        try { localStorage.setItem(key, JSON.stringify(seed)); } catch {}
-      },
-      (error) => {
-        console.error(`No se pudo leer ${key} desde Firebase`, error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [key]);
-
-  const update = async (nextValue) => {
-    setVal(nextValue);
-    try { localStorage.setItem(key, JSON.stringify(nextValue)); } catch {}
-    await setDoc(doc(db, "siteContent", key), { value: nextValue, updatedAt: Date.now() });
-  };
-
+  const update = (v) => { setVal(v); try { localStorage.setItem(key, JSON.stringify(v)); } catch {} };
   return [val, update];
 }
 
-async function fileToB64(file) {
-  if (!file) return "";
-
-  const safeName = file.name.replace(/[^a-z0-9._-]/gi, "_").toLowerCase();
-  const storagePath = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
-  const fileRef = ref(storage, storagePath);
-
-  await uploadBytes(fileRef, file);
-  return getDownloadURL(fileRef);
+function fileToB64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("Read failed"));
+    r.readAsDataURL(file);
+  });
 }
-// â”€â”€ SEED DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// ── SEED DATA ──────────────────────────────────────────────────────────────
 const SEED_HERO = {
   topLabel: "Sede Interuniversitaria de Alajuela",
   title: "La voz de los estudiantes de la SIA",
-  subtitle: "AsociaciÃ³n de Estudiantes de la Sede Interuniversitaria de Alajuela â€” representando, apoyando y velando por los intereses de toda la comunidad estudiantil.",
-  ctaLeft: "Ãšltimas Noticias â†’",
+  subtitle: "Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela — representando, apoyando y velando por los intereses de toda la comunidad estudiantil.",
+  ctaLeft: "Últimas Noticias →",
   ctaRight: "Ver Comisiones",
   images: [],
 };
@@ -132,16 +78,16 @@ const SEED_STATS = [
   { id: 1, value: "690+", label: "Estudiantes" },
   { id: 2, value: "3",    label: "Carreras" },
   { id: 3, value: "7",    label: "Comisiones" },
-  { id: 4, value: "2026", label: "ReactivaciÃ³n" },
+  { id: 4, value: "2026", label: "Reactivación" },
 ];
 
 const SEED_ABOUT = {
-  p1: "ASOSIA es la AsociaciÃ³n de Estudiantes de la Sede Interuniversitaria de Alajuela, fundada en febrero de 2007. Representamos a aproximadamente 690 estudiantes de IngenierÃ­a Industrial, IngenierÃ­a MecÃ¡nica y DiseÃ±o GrÃ¡fico.",
-  p2: "Tras dos aÃ±os de inactividad, en marzo de 2026 una nueva junta directiva asumiÃ³ el reto de reactivarla con mÃ¡s fuerza que nunca.",
-  mision: "Velar por las necesidades de la comunidad estudiantil mediante representaciÃ³n y acompaÃ±amiento.",
+  p1: "ASOSIA es la Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela, fundada en febrero de 2007. Representamos a aproximadamente 690 estudiantes de Ingeniería Industrial, Ingeniería Mecánica y Diseño Gráfico.",
+  p2: "Tras dos años de inactividad, en marzo de 2026 una nueva junta directiva asumió el reto de reactivarla con más fuerza que nunca.",
+  mision: "Velar por las necesidades de la comunidad estudiantil mediante representación y acompañamiento.",
   vision: "Construir una comunidad unida y orgullosa, con identidad propia que trascienda generaciones.",
-  legado: "Ser recordados como la ASOSIA que devolviÃ³ la vida estudiantil a la sede.",
-  valores: "ParticipaciÃ³n, integraciÃ³n, bienestar, innovaciÃ³n y representaciÃ³n genuina.",
+  legado: "Ser recordados como la ASOSIA que devolvió la vida estudiantil a la sede.",
+  valores: "Participación, integración, bienestar, innovación y representación genuina.",
 };
 
 const SEED_SOCIAL = {
@@ -152,33 +98,33 @@ const SEED_SOCIAL = {
 };
 
 const SEED_NEWS = [
-  { id: 1, title: "ASOSIA se reactiva oficialmente en marzo de 2026", date: "2026-03-10", excerpt: "DespuÃ©s de dos aÃ±os de inactividad, una nueva junta directiva asumiÃ³ el reto de reactivar la asociaciÃ³n estudiantil.", images: [], link: "", category: "Institucional" },
-  { id: 2, title: "Primer torneo de fÃºtbol del aÃ±o", date: "2026-04-02", excerpt: "La ComisiÃ³n de Deportes invita a todos los estudiantes a inscribirse al torneo interfacultades.", images: [], link: "", category: "Deportes" },
+  { id: 1, title: "ASOSIA se reactiva oficialmente en marzo de 2026", date: "2026-03-10", excerpt: "Después de dos años de inactividad, una nueva junta directiva asumió el reto de reactivar la asociación estudiantil.", images: [], link: "", category: "Institucional" },
+  { id: 2, title: "Primer torneo de fútbol del año", date: "2026-04-02", excerpt: "La Comisión de Deportes invita a todos los estudiantes a inscribirse al torneo interfacultades.", images: [], link: "", category: "Deportes" },
 ];
 
 const SEED_SPORTS = [
-  { id: 1, title: "Torneo de FÃºtbol â€” Inscripciones Abiertas", date: "2026-05-10", excerpt: "InscribÃ­ tu equipo antes del 20 de mayo. MÃ¡ximo 10 jugadores por equipo.", images: [], link: "", tag: "FÃºtbol" },
-  { id: 2, title: "Campeonato de Ping-Pong", date: "2026-05-18", excerpt: "CategorÃ­as individual y dobles. Primer lugar se lleva el trofeo ASOSIA 2026.", images: [], link: "", tag: "Ping-Pong" },
+  { id: 1, title: "Torneo de Fútbol — Inscripciones Abiertas", date: "2026-05-10", excerpt: "Inscribí tu equipo antes del 20 de mayo. Máximo 10 jugadores por equipo.", images: [], link: "", tag: "Fútbol" },
+  { id: 2, title: "Campeonato de Ping-Pong", date: "2026-05-18", excerpt: "Categorías individual y dobles. Primer lugar se lleva el trofeo ASOSIA 2026.", images: [], link: "", tag: "Ping-Pong" },
 ];
 
 const SEED_ACTIVITIES = [
-  { id: 1, title: "Feria de Ciencia e InnovaciÃ³n", date: "2026-06-05", excerpt: "PresentÃ¡ tu proyecto. CategorÃ­as: prototipo, investigaciÃ³n y diseÃ±o grÃ¡fico.", images: [], link: "", tag: "Ciencia" },
-  { id: 2, title: "Semana del Bienestar Estudiantil", date: "2026-06-12", excerpt: "Talleres de manejo del estrÃ©s, orientaciÃ³n psicolÃ³gica y actividades recreativas.", images: [], link: "", tag: "Bienestar" },
+  { id: 1, title: "Feria de Ciencia e Innovación", date: "2026-06-05", excerpt: "Presentá tu proyecto. Categorías: prototipo, investigación y diseño gráfico.", images: [], link: "", tag: "Ciencia" },
+  { id: 2, title: "Semana del Bienestar Estudiantil", date: "2026-06-12", excerpt: "Talleres de manejo del estrés, orientación psicológica y actividades recreativas.", images: [], link: "", tag: "Bienestar" },
 ];
 
 const SEED_MEMBERS = [
-  { id: 1, name: "Keilor HernÃ¡ndez",  role: "Presidencia",     photo: "", banner: "", career: "IngenierÃ­a Industrial" },
-  { id: 2, name: "Maybelle Grainger", role: "Vicepresidencia", photo: "", banner: "", career: "DiseÃ±o GrÃ¡fico" },
-  { id: 3, name: "MatÃ­as HernÃ¡ndez",  role: "TesorerÃ­a",       photo: "", banner: "", career: "IngenierÃ­a Industrial" },
-  { id: 4, name: "David Valdivia",    role: "SecretarÃ­a",      photo: "", banner: "", career: "IngenierÃ­a MecÃ¡nica" },
-  { id: 5, name: "Katherine Fajardo", role: "VocalÃ­a I",       photo: "", banner: "", career: "IngenierÃ­a Industrial" },
-  { id: 6, name: "Ryan ChavarrÃ­a",    role: "VocalÃ­a II",      photo: "", banner: "", career: "IngenierÃ­a MecÃ¡nica" },
-  { id: 7, name: "Dereck Mora",       role: "Suplencia",       photo: "", banner: "", career: "DiseÃ±o GrÃ¡fico" },
+  { id: 1, name: "Keilor Hernández",  role: "Presidencia",     photo: "", banner: "", career: "Ingeniería Industrial" },
+  { id: 2, name: "Maybelle Grainger", role: "Vicepresidencia", photo: "", banner: "", career: "Diseño Gráfico" },
+  { id: 3, name: "Matías Hernández",  role: "Tesorería",       photo: "", banner: "", career: "Ingeniería Industrial" },
+  { id: 4, name: "David Valdivia",    role: "Secretaría",      photo: "", banner: "", career: "Ingeniería Mecánica" },
+  { id: 5, name: "Katherine Fajardo", role: "Vocalía I",       photo: "", banner: "", career: "Ingeniería Industrial" },
+  { id: 6, name: "Ryan Chavarría",    role: "Vocalía II",      photo: "", banner: "", career: "Ingeniería Mecánica" },
+  { id: 7, name: "Dereck Mora",       role: "Suplencia",       photo: "", banner: "", career: "Diseño Gráfico" },
 ];
 
 const SEED_MERCH_TEXT = {
-  main: "La tienda oficial de ASOSIA estÃ¡ en producciÃ³n. Ropa, accesorios y mÃ¡s con la identidad de la sede â€” muy pronto.",
-  items: ["ðŸ‘• Camisetas", "ðŸ§¢ Gorras", "ðŸŽ’ Bolsos", "ðŸ“Œ Pines"],
+  main: "La tienda oficial de ASOSIA está en producción. Ropa, accesorios y más con la identidad de la sede — muy pronto.",
+  items: ["👕 Camisetas", "🧢 Gorras", "🎒 Bolsos", "📌 Pines"],
 };
 
 const SEED_FORMS = [
@@ -186,16 +132,16 @@ const SEED_FORMS = [
 ];
 
 const SEED_COMMISSIONS = [
-  { id: 1, name: "Desarrollo y Mejora Continua", icon: "ðŸ“Š", color: C.navy,    desc: "Brazo analÃ­tico de la asociaciÃ³n. Recopila informaciÃ³n sobre necesidades estudiantiles mediante encuestas y anÃ¡lisis de datos.", detail: "Esta comisiÃ³n elabora informes que fundamentan propuestas ante la administraciÃ³n de la sede. Si te interesa el anÃ¡lisis de datos, la investigaciÃ³n o la gestiÃ³n de proyectos, este es tu lugar.", contact: "desarrollo@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 2, name: "Ciencia e InnovaciÃ³n",         icon: "ðŸ”¬", color: C.sky,     desc: "Impulsa una cultura cientÃ­fica y tecnolÃ³gica entre los estudiantes de la sede.", detail: "Organiza ferias, hackathons y experiencias de laboratorio interdisciplinarias. Buscamos estudiantes creativos de cualquier carrera que quieran explorar la innovaciÃ³n.", contact: "ciencia@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 3, name: "Deportes",                     icon: "âš½", color: C.orange,  desc: "Planifica y ejecuta torneos de fÃºtbol, baloncesto y ping-pong durante el aÃ±o.", detail: "Somos la comisiÃ³n mÃ¡s activa en eventos presenciales. Necesitamos Ã¡rbitros, organizadores y atletas. Â¡No se requiere experiencia previa!", contact: "deportes@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 4, name: "Bienestar Estudiantil",        icon: "ðŸ’š", color: C.red,     desc: "Trabaja en favor de la salud mental, fÃ­sica y social de los estudiantes.", detail: "Coordinamos talleres, charlas y espacios de escucha activa. Si estudiÃ¡s PsicologÃ­a o simplemente querÃ©s contribuir al bienestar de tus compaÃ±eros, unite.", contact: "bienestar@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 5, name: "DiseÃ±o e InnovaciÃ³n Visual",   icon: "ðŸŽ¨", color: "#7b5ea7", desc: "Promueve la creatividad y el desarrollo artÃ­stico dentro de la sede.", detail: "Gestiona la identidad visual de ASOSIA, organiza exposiciones y talleres creativos. Ideal para estudiantes de DiseÃ±o GrÃ¡fico o cualquiera con pasiÃ³n por el arte.", contact: "diseno@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 6, name: "Redes Sociales",               icon: "ðŸ“±", color: C.sky,     desc: "Gestiona la comunicaciÃ³n digital y la presencia de ASOSIA en plataformas digitales.", detail: "Creamos contenido, gestionamos publicaciones y respondemos a la comunidad. Buscamos redactores, fotÃ³grafos y personas con ojo para las redes.", contact: "redes@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
-  { id: 7, name: "Empleo y Oportunidades",       icon: "ðŸ’¼", color: C.navy,    desc: "Facilita acceso a pasantÃ­as, prÃ¡cticas y oportunidades laborales.", detail: "Conectamos a los estudiantes con empresas y organizaciones de la regiÃ³n. Si tenÃ©s contactos en la industria o querÃ©s desarrollar tu red profesional, esta comisiÃ³n es para vos.", contact: "empleo@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 1, name: "Desarrollo y Mejora Continua", icon: "📊", color: C.navy,    desc: "Brazo analítico de la asociación. Recopila información sobre necesidades estudiantiles mediante encuestas y análisis de datos.", detail: "Esta comisión elabora informes que fundamentan propuestas ante la administración de la sede. Si te interesa el análisis de datos, la investigación o la gestión de proyectos, este es tu lugar.", contact: "desarrollo@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 2, name: "Ciencia e Innovación",         icon: "🔬", color: C.sky,     desc: "Impulsa una cultura científica y tecnológica entre los estudiantes de la sede.", detail: "Organiza ferias, hackathons y experiencias de laboratorio interdisciplinarias. Buscamos estudiantes creativos de cualquier carrera que quieran explorar la innovación.", contact: "ciencia@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 3, name: "Deportes",                     icon: "⚽", color: C.orange,  desc: "Planifica y ejecuta torneos de fútbol, baloncesto y ping-pong durante el año.", detail: "Somos la comisión más activa en eventos presenciales. Necesitamos árbitros, organizadores y atletas. ¡No se requiere experiencia previa!", contact: "deportes@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 4, name: "Bienestar Estudiantil",        icon: "💚", color: C.red,     desc: "Trabaja en favor de la salud mental, física y social de los estudiantes.", detail: "Coordinamos talleres, charlas y espacios de escucha activa. Si estudiás Psicología o simplemente querés contribuir al bienestar de tus compañeros, unite.", contact: "bienestar@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 5, name: "Diseño e Innovación Visual",   icon: "🎨", color: "#7b5ea7", desc: "Promueve la creatividad y el desarrollo artístico dentro de la sede.", detail: "Gestiona la identidad visual de ASOSIA, organiza exposiciones y talleres creativos. Ideal para estudiantes de Diseño Gráfico o cualquiera con pasión por el arte.", contact: "diseno@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 6, name: "Redes Sociales",               icon: "📱", color: C.sky,     desc: "Gestiona la comunicación digital y la presencia de ASOSIA en plataformas digitales.", detail: "Creamos contenido, gestionamos publicaciones y respondemos a la comunidad. Buscamos redactores, fotógrafos y personas con ojo para las redes.", contact: "redes@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
+  { id: 7, name: "Empleo y Oportunidades",       icon: "💼", color: C.navy,    desc: "Facilita acceso a pasantías, prácticas y oportunidades laborales.", detail: "Conectamos a los estudiantes con empresas y organizaciones de la región. Si tenés contactos en la industria o querés desarrollar tu red profesional, esta comisión es para vos.", contact: "empleo@asosia.cr", whatsapp: "", instagram: "", joinUrl: "", images: [] },
 ];
 
-// â”€â”€ BRAND PATTERNS (multiple animated backgrounds) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── BRAND PATTERNS (multiple animated backgrounds) ─────────────────────────
 function BrandPattern({ opacity = 0.12, colors = [C.orange, C.sky, C.red, C.cream], variant = 0 }) {
   if (variant === 1) return (
     <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -232,7 +178,7 @@ function BrandPattern({ opacity = 0.12, colors = [C.orange, C.sky, C.red, C.crea
       <path d="M100 300 Q 400 100 700 350 Q 1000 600 1200 300" stroke={colors[0]} strokeWidth="3" fill="none" opacity={opacity * 1.2} className="hero-pattern-anim5" />
     </svg>
   );
-  // default variant 0 â€” curved lines
+  // default variant 0 — curved lines
   return (
     <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
       <path d="M-80 120 Q 200 -60 400 200 Q 600 460 850 150 Q 1050 -40 1280 200" stroke={colors[0]} strokeWidth="48" fill="none" strokeLinecap="round" opacity={opacity} className="hero-pattern-anim" />
@@ -248,7 +194,7 @@ function BrandPattern({ opacity = 0.12, colors = [C.orange, C.sky, C.red, C.crea
   );
 }
 
-// â”€â”€ LOGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── LOGO ───────────────────────────────────────────────────────────────────
 function Logo({ size = 44, dark = false }) {
   const txtColor = dark ? C.white : C.dark;
   const r = size * 0.22;
@@ -256,11 +202,11 @@ function Logo({ size = 44, dark = false }) {
   return (
     <svg width={size * 3.2} height={size} viewBox={`0 0 ${size * 3.2} ${size}`} xmlns="http://www.w3.org/2000/svg">
       <circle cx={cx} cy={r + 2} r={r} fill={C.sky} />
-      <text x={cx} y={r + 7} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">ðŸ”§</text>
+      <text x={cx} y={r + 7} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">🔧</text>
       <circle cx={cx - r * 1.15} cy={r * 2.9} r={r} fill={C.red} />
-      <text x={cx - r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">âœ’ï¸</text>
+      <text x={cx - r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">✒️</text>
       <circle cx={cx + r * 1.15} cy={r * 2.9} r={r} fill={C.orange} />
-      <text x={cx + r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">âš™ï¸</text>
+      <text x={cx + r * 1.15} y={r * 3.35} textAnchor="middle" fontSize={r * 1.1} fontFamily="Nunito, sans-serif">⚙️</text>
       <text x={size * 1.18} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="800" fontSize={size * 0.42} fill={txtColor}>aso</text>
       <text x={size * 1.18 + size * 0.42 * 1.82} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="900" fontSize={size * 0.44} fill={C.red}>S</text>
       <text x={size * 1.18 + size * 0.42 * 1.82 + size * 0.27} y={size * 0.72} fontFamily="Nunito, sans-serif" fontWeight="900" fontSize={size * 0.44} fill={C.sky}>I</text>
@@ -269,7 +215,7 @@ function Logo({ size = 44, dark = false }) {
   );
 }
 
-// â”€â”€ NAV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── NAV ────────────────────────────────────────────────────────────────────
 function Nav({ active, setActive, isAdmin, onAdminClick }) {
   const isMobile = useWindowWidth() < 768;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -301,12 +247,12 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
                 marginLeft: 4, background: C.orange, color: C.white,
                 border: `1px solid ${C.orange}`, borderRadius: 6, padding: "7px 10px", cursor: "pointer",
                 fontSize: 12, fontFamily: "Nunito, sans-serif", fontWeight: 700, transition: "all 0.18s",
-              }}>âœï¸ Editor</button>
+              }}>✏️ Editor</button>
             )}
           </div>
         )}
 
-        {/* Mobile: botÃ³n hamburguesa */}
+        {/* Mobile: botón hamburguesa */}
         {isMobile && (
           <button onClick={() => setMenuOpen(o => !o)} style={{
             background: "none", border: "none", cursor: "pointer", padding: "8px",
@@ -319,7 +265,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
         )}
       </div>
 
-      {/* Mobile: menÃº desplegable */}
+      {/* Mobile: menú desplegable */}
       {isMobile && menuOpen && (
         <div style={{ background: C.navy, borderTop: "1px solid rgba(255,255,255,0.1)", padding: "8px 12px 16px" }}>
           {tabs.map(t => (
@@ -339,7 +285,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
               background: C.orange, color: C.white,
               border: "none", borderRadius: 8, padding: "12px 16px", cursor: "pointer",
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 15, marginTop: 8,
-            }}>âœï¸ Editor</button>
+            }}>✏️ Editor</button>
           )}
         </div>
       )}
@@ -347,8 +293,8 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
   );
 }
 
-// â”€â”€ RECENT FEED â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const CAT_COLORS = { Institucional: C.navy, Deportes: C.orange, Academico: C.sky, Cultural: C.red, Ciencia: C.sky, Bienestar: "#5a9a6f", General: C.navy, FÃºtbol: C.orange, "Ping-Pong": C.sky, Baloncesto: C.red };
+// ── RECENT FEED ─────────────────────────────────────────────────────────────
+const CAT_COLORS = { Institucional: C.navy, Deportes: C.orange, Academico: C.sky, Cultural: C.red, Ciencia: C.sky, Bienestar: "#5a9a6f", General: C.navy, Fútbol: C.orange, "Ping-Pong": C.sky, Baloncesto: C.red };
 
 function RecentFeed({ news, sports, activities, setActive }) {
   const all = [
@@ -365,8 +311,8 @@ function RecentFeed({ news, sports, activities, setActive }) {
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
         <div className="recent-feed-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 32 }}>
           <div>
-            <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 8, textTransform: "uppercase" }}>Lo mÃ¡s reciente</div>
-            <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 30, color: C.navy, margin: 0, fontWeight: 900 }}>Ãšltimas publicaciones</h2>
+            <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 8, textTransform: "uppercase" }}>Lo más reciente</div>
+            <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 30, color: C.navy, margin: 0, fontWeight: 900 }}>Últimas publicaciones</h2>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             {["Noticias","Deportes","Actividades"].map(s => (
@@ -400,7 +346,7 @@ function RecentFeed({ news, sports, activities, setActive }) {
   );
 }
 
-// â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HERO ───────────────────────────────────────────────────────────────────
 function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, news, sports, activities }) {
   const isMobile = useWindowWidth() < 768;
   const [imgIdx, setImgIdx] = useState(0);
@@ -414,7 +360,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
 
   return (
     <div>
-      {/* â”€â”€ HERO BANNER â”€â”€ */}
+      {/* ── HERO BANNER ── */}
       <div style={{ position: "relative", overflow: "hidden", background: C.navy, minHeight: 520 }}>
         <BrandPattern opacity={0.13} colors={[C.orange, C.sky, C.red, C.cream]} variant={0} />
         {hasImgs && (
@@ -438,7 +384,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
             <button onClick={() => setActive("Noticias")} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 18px rgba(243,150,63,0.4)" }}>
-              {hero.ctaLeft || "Ãšltimas Noticias â†’"}
+              {hero.ctaLeft || "Últimas Noticias →"}
             </button>
             <button onClick={() => setActive("Comisiones")} style={{ background: "rgba(255,255,255,0.1)", color: C.white, border: "2px solid rgba(255,255,255,0.45)", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", backdropFilter: "blur(4px)" }}>
               {hero.ctaRight || "Ver Comisiones"}
@@ -446,7 +392,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           </div>
           {isAdmin && (
             <button onClick={onEditHero} style={{ marginTop: 24, background: "rgba(255,255,255,0.15)", color: C.white, border: "1px solid rgba(255,255,255,0.35)", borderRadius: 8, padding: "9px 22px", fontSize: 13, fontFamily: "Nunito, sans-serif", cursor: "pointer", fontWeight: 700 }}>
-              âœï¸ Editar secciÃ³n inicio
+              ✏️ Editar sección inicio
             </button>
           )}
           {hasImgs && hero.images.length > 1 && (
@@ -459,7 +405,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
         </div>
       </div>
 
-      {/* â”€â”€ STATS BAR â”€â”€ */}
+      {/* ── STATS BAR ── */}
       <div style={{ background: C.cream, position: "relative", overflow: "hidden" }}>
         <BrandPattern opacity={0.07} colors={[C.orange, C.navy, C.red, C.sky]} variant={2} />
         <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
@@ -472,21 +418,21 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
         </div>
       </div>
 
-      {/* â”€â”€ RECENT FEED â”€â”€ */}
+      {/* ── RECENT FEED ── */}
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
-      {/* â”€â”€ ABOUT â”€â”€ */}
+      {/* ── ABOUT ── */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "32px 16px" : "64px 24px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
         <div>
-          <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>Â¿QuiÃ©nes somos?</div>
-          <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociaciÃ³n estudiantil de la SIA</h2>
+          <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
+          <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#444", fontSize: 15, lineHeight: 1.8, marginBottom: 14 }}>{about.p1}</p>
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#444", fontSize: 15, lineHeight: 1.8 }}>{about.p2}</p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
           {[
-            { title: "MisiÃ³n", text: about.mision, bg: C.navy, fg: C.white },
-            { title: "VisiÃ³n", text: about.vision, bg: C.sky, fg: C.white },
+            { title: "Misión", text: about.mision, bg: C.navy, fg: C.white },
+            { title: "Visión", text: about.vision, bg: C.sky, fg: C.white },
             { title: "Legado", text: about.legado, bg: C.orange, fg: C.white },
             { title: "Valores", text: about.valores, bg: C.cream, fg: C.navy },
           ].map(({ title, text, bg, fg }) => (
@@ -501,7 +447,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
         </div>
       </div>
 
-      {/* â”€â”€ SOCIAL â”€â”€ */}
+      {/* ── SOCIAL ── */}
       {(social.whatsapp || social.instagram || social.email || social.facebook) && (
         <div style={{ background: C.navy, position: "relative", overflow: "hidden", padding: "56px 24px" }}>
           <BrandPattern opacity={0.1} colors={[C.orange, C.sky, C.red, C.cream]} variant={3} />
@@ -511,22 +457,22 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
             <div className="social-buttons" style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
               {social.whatsapp && (
                 <a href={social.whatsapp} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "#25d366", color: C.white, borderRadius: 12, padding: "13px 24px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14 }}>
-                  ðŸ’¬ WhatsApp
+                  💬 WhatsApp
                 </a>
               )}
               {social.instagram && (
                 <a href={social.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", color: C.white, borderRadius: 12, padding: "13px 24px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14 }}>
-                  ðŸ“¸ Instagram
+                  📸 Instagram
                 </a>
               )}
               {social.facebook && (
                 <a href={social.facebook} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, background: "#1877f2", color: C.white, borderRadius: 12, padding: "13px 24px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14 }}>
-                  ðŸ“˜ Facebook
+                  📘 Facebook
                 </a>
               )}
               {social.email && (
                 <a href={`mailto:${social.email}`} style={{ display: "flex", alignItems: "center", gap: 10, background: C.orange, color: C.white, borderRadius: 12, padding: "13px 24px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14 }}>
-                  âœ‰ï¸ Correo
+                  ✉️ Correo
                 </a>
               )}
             </div>
@@ -537,7 +483,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
   );
 }
 
-// â”€â”€ DETAIL MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── DETAIL MODAL ───────────────────────────────────────────────────────────
 function DetailModal({ item, tagKey, onClose }) {
   const [imgIdx, setImgIdx] = useState(0);
   const tag = item[tagKey] || item.category || "";
@@ -568,7 +514,7 @@ function DetailModal({ item, tagKey, onClose }) {
           <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 22, margin: "0 0 14px", fontWeight: 900, lineHeight: 1.25 }}>{item.title}</h2>
           <p style={{ fontFamily: "Nunito, sans-serif", color: "#555", fontSize: 15, lineHeight: 1.8, margin: "0 0 20px" }}>{item.excerpt}</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {item.link && <a href={item.link} target="_blank" rel="noreferrer" style={{ background: C.orange, color: C.white, borderRadius: 8, padding: "10px 22px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14 }}>Ver mÃ¡s â†’</a>}
+            {item.link && <a href={item.link} target="_blank" rel="noreferrer" style={{ background: C.orange, color: C.white, borderRadius: 8, padding: "10px 22px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14 }}>Ver más →</a>}
             <button onClick={onClose} style={{ background: "transparent", border: "2px solid #ddd", borderRadius: 8, padding: "10px 20px", fontFamily: "Nunito, sans-serif", fontWeight: 700, color: "#888", cursor: "pointer", fontSize: 14 }}>Cerrar</button>
           </div>
         </div>
@@ -577,7 +523,7 @@ function DetailModal({ item, tagKey, onClose }) {
   );
 }
 
-// â”€â”€ CONTENT CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CONTENT CARD ───────────────────────────────────────────────────────────
 function ContentCard({ item, tagKey }) {
   const [imgIdx, setImgIdx] = useState(0);
   const [open, setOpen] = useState(false);
@@ -608,8 +554,8 @@ function ContentCard({ item, tagKey }) {
         <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 11, marginBottom: 6, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
         <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 10px", fontWeight: 800, lineHeight: 1.3 }}>{item.title}</h3>
         <p style={{ fontFamily: "Nunito, sans-serif", color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0, flex: 1 }}>{item.excerpt}</p>
-        {item.link && <a href={item.link} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ marginTop: 14, display: "inline-block", background: C.orange, color: C.white, borderRadius: 8, padding: "9px 18px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>Ver mÃ¡s â†’</a>}
-        <span style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.sky, fontWeight: 700, cursor: "pointer" }}>Abrir nota {item.images?.length > 0 ? `Â· ${item.images.length} foto${item.images.length > 1 ? "s" : ""}` : ""} â†’</span>
+        {item.link && <a href={item.link} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ marginTop: 14, display: "inline-block", background: C.orange, color: C.white, borderRadius: 8, padding: "9px 18px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>Ver más →</a>}
+        <span style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.sky, fontWeight: 700, cursor: "pointer" }}>Abrir nota {item.images?.length > 0 ? `· ${item.images.length} foto${item.images.length > 1 ? "s" : ""}` : ""} →</span>
       </div>
     </div>
     {open && <DetailModal item={item} tagKey={tagKey} onClose={() => setOpen(false)} />}
@@ -634,7 +580,7 @@ function SectionPage({ title, subtitle, accent, items, tagKey, emptyMsg }) {
   );
 }
 
-// â”€â”€ COMMISSIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── COMMISSIONS ────────────────────────────────────────────────────────────
 function CommissionModal({ c, onClose }) {
   const [imgIdx, setImgIdx] = useState(0);
   const hasImgs = c.images && c.images.length > 0;
@@ -664,12 +610,12 @@ function CommissionModal({ c, onClose }) {
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               {c.whatsapp && (
                 <a href={c.whatsapp} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, background: "#25d366", color: C.white, borderRadius: 8, padding: "9px 16px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>
-                  ðŸ’¬ WhatsApp
+                  💬 WhatsApp
                 </a>
               )}
               {c.instagram && (
                 <a href={c.instagram} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg,#f09433,#cc2366)", color: C.white, borderRadius: 8, padding: "9px 16px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>
-                  ðŸ“¸ Instagram
+                  📸 Instagram
                 </a>
               )}
             </div>
@@ -677,7 +623,7 @@ function CommissionModal({ c, onClose }) {
           {c.joinUrl && (
             <div style={{ marginBottom: 20 }}>
               <a href={c.joinUrl} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: `linear-gradient(135deg, ${c.color}, ${c.color}cc)`, color: C.white, borderRadius: 10, padding: "13px 28px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 15, boxShadow: `0 4px 18px ${c.color}44` }}>
-                âœ‹ Unirse a esta comisiÃ³n â†’
+                ✋ Unirse a esta comisión →
               </a>
             </div>
           )}
@@ -695,7 +641,7 @@ function ComisionesPage({ commissions }) {
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>Estructura</div>
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.navy, margin: "0 0 12px", fontWeight: 900 }}>Comisiones de Trabajo</h2>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 15 }}>TocÃ¡ una comisiÃ³n para ver mÃ¡s detalles y cÃ³mo unirte.</p>
+        <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 15 }}>Tocá una comisión para ver más detalles y cómo unirte.</p>
       </div>
       <div className="commissions-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 22 }}>
         {commissions.map((c, i) => (
@@ -707,7 +653,7 @@ function ComisionesPage({ commissions }) {
             </div>
             <div style={{ padding: "16px 22px 20px" }}>
               <p style={{ fontFamily: "Nunito, sans-serif", color: "#666", fontSize: 13, lineHeight: 1.65, margin: "0 0 12px" }}>{c.desc}</p>
-              <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: c.color, fontWeight: 700 }}>Ver mÃ¡s â†’</span>
+              <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 12, color: c.color, fontWeight: 700 }}>Ver más →</span>
             </div>
           </div>
         ))}
@@ -717,12 +663,12 @@ function ComisionesPage({ commissions }) {
   );
 }
 
-// â”€â”€ MEMBER PHOTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MEMBER PHOTO ───────────────────────────────────────────────────────────
 function MemberPhoto({ src, name, fallbackBg }) {
   const [broken, setBroken] = useState(false);
   if (!src || broken) {
     return (
-      <div style={{ width: 76, height: 76, borderRadius: "50%", border: "3px solid white", background: fallbackBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: "0 2px 10px rgba(0,0,0,0.15)", flexShrink: 0 }}>ðŸ‘¤</div>
+      <div style={{ width: 76, height: 76, borderRadius: "50%", border: "3px solid white", background: fallbackBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: "0 2px 10px rgba(0,0,0,0.15)", flexShrink: 0 }}>👤</div>
     );
   }
   return (
@@ -735,7 +681,7 @@ function MemberPhoto({ src, name, fallbackBg }) {
   );
 }
 
-// â”€â”€ ANIMATED MEMBER BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ANIMATED MEMBER BANNER ─────────────────────────────────────────────────
 const BANNER_PALETTES = [
   { a: C.navy,   b: C.sky,    c: C.cream  },
   { a: C.red,    b: C.orange, c: C.cream  },
@@ -781,7 +727,7 @@ function AnimatedMemberBanner({ idx }) {
   );
 }
 
-// â”€â”€ ANIMATED MERCH BG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ANIMATED MERCH BG ──────────────────────────────────────────────────────
 function MerchBg({ idx = 0 }) {
   // Subtle navy/sky palette so product photo stays hero
   const palettes = [
@@ -805,7 +751,7 @@ function MerchBg({ idx = 0 }) {
     "M7 8 Q7 5 12 5 Q17 5 17 8 L19 20 L5 20 Z M9 8 L9 6 M15 8 L15 6",
   ];
 
-  // Fixed positions for 8 icons spread across 240Ã—200 area
+  // Fixed positions for 8 icons spread across 240×200 area
   const placements = [
     { x: 20,  y: 20,  scale: 1.1, dur: "14s", delay: "0s"   },
     { x: 160, y: 10,  scale: 0.9, dur: "18s", delay: "2s"   },
@@ -847,7 +793,7 @@ function MerchBg({ idx = 0 }) {
   );
 }
 
-// â”€â”€ INTEGRANTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── INTEGRANTES ────────────────────────────────────────────────────────────
 const BANNER_GRADIENTS = [
   `linear-gradient(135deg, ${C.navy}, ${C.sky})`,
   `linear-gradient(135deg, ${C.red}, ${C.orange})`,
@@ -888,12 +834,12 @@ function IntegrantesPage({ members }) {
   );
 }
 
-// â”€â”€ FORMULARIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── FORMULARIOS ────────────────────────────────────────────────────────────
 function FormulariosPage({ forms }) {
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
-        <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>ParticipaciÃ³n</div>
+        <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 2.5, marginBottom: 10, textTransform: "uppercase" }}>Participación</div>
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 38, color: C.navy, margin: 0, fontWeight: 900 }}>Formularios</h2>
       </div>
       {forms.length === 0
@@ -901,12 +847,12 @@ function FormulariosPage({ forms }) {
         : <div style={{ display: "grid", gap: 18 }}>
             {forms.map(f => (
               <div key={f.id} className="card-hover form-card" style={{ background: C.white, borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", display: "flex", gap: 20, alignItems: "center" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>ðŸ“‹</div>
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📋</div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 4px", fontWeight: 800 }}>{f.title}</h3>
                   <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: 0 }}>{f.description}</p>
                 </div>
-                {f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ background: C.orange, color: C.white, borderRadius: 10, padding: "11px 22px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>Abrir â†’</a>}
+                {f.url && <a href={f.url} target="_blank" rel="noreferrer" style={{ background: C.orange, color: C.white, borderRadius: 10, padding: "11px 22px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>Abrir →</a>}
               </div>
             ))}
           </div>
@@ -915,7 +861,7 @@ function FormulariosPage({ forms }) {
   );
 }
 
-// â”€â”€ MERCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── MERCH ──────────────────────────────────────────────────────────────────
 function CountdownTimer({ deadline }) {
   const [timeLeft, setTimeLeft] = useState({});
   useEffect(() => {
@@ -933,11 +879,11 @@ function CountdownTimer({ deadline }) {
     const t = setInterval(calc, 1000);
     return () => clearInterval(t);
   }, [deadline]);
-  if (timeLeft.expired) return <span style={{ color: C.red, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12 }}>â›” Plazo vencido</span>;
+  if (timeLeft.expired) return <span style={{ color: C.red, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12 }}>⛔ Plazo vencido</span>;
   if (!timeLeft.d && !timeLeft.h && !timeLeft.m && !timeLeft.s) return null;
   return (
     <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-      <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#888", fontWeight: 700 }}>â° Cierra en:</span>
+      <span style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#888", fontWeight: 700 }}>⏰ Cierra en:</span>
       {[["d","d"],["h","h"],["m","m"],["s","s"]].map(([key, label]) => (
         <span key={key} style={{ background: C.navy, color: C.white, borderRadius: 5, padding: "2px 7px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12 }}>{timeLeft[key]}{label}</span>
       ))}
@@ -963,12 +909,12 @@ function MerchPage({ merch, merchEmptyText }) {
       <div style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "80px 24px" }}>
         {/* Central icon cluster */}
         <div style={{ position: "relative", display: "inline-block", marginBottom: 28 }}>
-          <div style={{ width: 100, height: 100, borderRadius: "50%", background: `linear-gradient(135deg, ${C.orange}, ${C.red})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, boxShadow: `0 0 0 12px ${C.orange}22, 0 0 0 24px ${C.orange}11`, margin: "0 auto" }}>ðŸ›ï¸</div>
-          <div style={{ position: "absolute", top: -8, right: -8, width: 32, height: 32, borderRadius: "50%", background: C.sky, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>âœ¨</div>
-          <div style={{ position: "absolute", bottom: -4, left: -10, width: 28, height: 28, borderRadius: "50%", background: C.cream, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>âš™ï¸</div>
+          <div style={{ width: 100, height: 100, borderRadius: "50%", background: `linear-gradient(135deg, ${C.orange}, ${C.red})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, boxShadow: `0 0 0 12px ${C.orange}22, 0 0 0 24px ${C.orange}11`, margin: "0 auto" }}>🛍️</div>
+          <div style={{ position: "absolute", top: -8, right: -8, width: 32, height: 32, borderRadius: "50%", background: C.sky, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>✨</div>
+          <div style={{ position: "absolute", bottom: -4, left: -10, width: 28, height: 28, borderRadius: "50%", background: C.cream, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>⚙️</div>
         </div>
         <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 52, color: C.white, margin: "0 0 10px", fontWeight: 900, letterSpacing: -1 }}>Merch asoSIA</h2>
-        <div style={{ background: `linear-gradient(90deg, ${C.orange}, ${C.red})`, color: C.white, borderRadius: 24, padding: "8px 28px", fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 16, marginBottom: 22, letterSpacing: 2, display: "inline-block", textTransform: "uppercase", boxShadow: `0 4px 20px ${C.orange}55` }}>ðŸš€ PrÃ³ximamente</div>
+        <div style={{ background: `linear-gradient(90deg, ${C.orange}, ${C.red})`, color: C.white, borderRadius: 24, padding: "8px 28px", fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 16, marginBottom: 22, letterSpacing: 2, display: "inline-block", textTransform: "uppercase", boxShadow: `0 4px 20px ${C.orange}55` }}>🚀 Próximamente</div>
         <p style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.65)", fontSize: 16, maxWidth: 360, margin: "0 auto", lineHeight: 1.75 }}>{txt.main}</p>
         <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
           {(txt.items || []).map(item => (
@@ -1015,7 +961,7 @@ function MerchPage({ merch, merchEmptyText }) {
           {merch.map(p => (
             <div key={p.id} className="card-hover" style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", position: "relative" }}>
               {p.isPreorder && (
-                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2, background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, color: C.white, borderRadius: 10, padding: "4px 11px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>ðŸŽ« PRE-VENTA</div>
+                <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2, background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, color: C.white, borderRadius: 10, padding: "4px 11px", fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>🎫 PRE-VENTA</div>
               )}
               {p.image
                 ? <img src={p.image} alt={p.name} style={{ width: "100%", height: 200, objectFit: "cover" }} />
@@ -1026,8 +972,8 @@ function MerchPage({ merch, merchEmptyText }) {
                 <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: "0 0 8px" }}>{p.desc}</p>
                 {p.isPreorder && p.deadline && <CountdownTimer deadline={p.deadline} />}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-                  <span style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 20, color: C.orange }}>â‚¡{p.price}</span>
-                  {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={{ background: p.isPreorder ? `linear-gradient(90deg, ${C.red}, ${C.orange})` : C.navy, color: C.white, borderRadius: 8, padding: "9px 16px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>{p.isPreorder ? "Reservar â†’" : "Pedir â†’"}</a>}
+                  <span style={{ fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 20, color: C.orange }}>₡{p.price}</span>
+                  {p.link && <a href={p.link} target="_blank" rel="noreferrer" style={{ background: p.isPreorder ? `linear-gradient(90deg, ${C.red}, ${C.orange})` : C.navy, color: C.white, borderRadius: 8, padding: "9px 16px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>{p.isPreorder ? "Reservar →" : "Pedir →"}</a>}
                 </div>
               </div>
             </div>
@@ -1038,26 +984,26 @@ function MerchPage({ merch, merchEmptyText }) {
   );
 }
 
-// â”€â”€ ADMIN MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ADMIN MODAL ────────────────────────────────────────────────────────────
 function AdminModal({ onClose, onLogin }) {
   const [pw, setPw] = useState(""); const [err, setErr] = useState(false);
   const check = () => pw === ADMIN_PASSWORD ? (onLogin(), onClose()) : setErr(true);
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 18, padding: 40, maxWidth: 360, width: "90%" }}>
-        <div style={{ fontSize: 44, marginBottom: 10, textAlign: "center" }}>ðŸ”’</div>
+        <div style={{ fontSize: 44, marginBottom: 10, textAlign: "center" }}>🔒</div>
         <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", textAlign: "center", fontWeight: 900 }}>Acceso de Administrador</h3>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, marginBottom: 18, textAlign: "center" }}>IngresÃ¡ la contraseÃ±a para editar el sitio.</p>
+        <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, marginBottom: 18, textAlign: "center" }}>Ingresá la contraseña para editar el sitio.</p>
         <input type="password" value={pw} onChange={e => { setPw(e.target.value); setErr(false); }} onKeyDown={e => e.key === "Enter" && check()}
-          placeholder="ContraseÃ±a" style={{ width: "100%", border: `2px solid ${err ? C.red : "#ddd"}`, borderRadius: 8, padding: "12px 14px", fontSize: 15, fontFamily: "Nunito, sans-serif", boxSizing: "border-box", marginBottom: 8, outline: "none" }} />
-        {err && <p style={{ color: C.red, fontSize: 13, fontFamily: "Nunito, sans-serif", margin: "0 0 10px" }}>ContraseÃ±a incorrecta</p>}
+          placeholder="Contraseña" style={{ width: "100%", border: `2px solid ${err ? C.red : "#ddd"}`, borderRadius: 8, padding: "12px 14px", fontSize: 15, fontFamily: "Nunito, sans-serif", boxSizing: "border-box", marginBottom: 8, outline: "none" }} />
+        {err && <p style={{ color: C.red, fontSize: 13, fontFamily: "Nunito, sans-serif", margin: "0 0 10px" }}>Contraseña incorrecta</p>}
         <button onClick={check} style={{ width: "100%", background: C.navy, color: C.white, border: "none", borderRadius: 8, padding: "13px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 15 }}>Ingresar</button>
       </div>
     </div>
   );
 }
 
-// â”€â”€ HERO EDIT MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HERO EDIT MODAL ────────────────────────────────────────────────────────
 function HeroEditModal({ hero, onSave, onClose }) {
   const [fields, setFields] = useState({ ...hero });
   const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
@@ -1069,8 +1015,8 @@ function HeroEditModal({ hero, onSave, onClose }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 18, padding: 36, maxWidth: 520, width: "100%", maxHeight: "88vh", overflowY: "auto" }}>
-        <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 22px", fontWeight: 900 }}>âœï¸ Editar Inicio</h3>
-        {[["topLabel","ETIQUETA SUPERIOR"],["title","TÃTULO PRINCIPAL"],["subtitle","SUBTÃTULO"],["ctaLeft","BOTÃ“N IZQUIERDO"],["ctaRight","BOTÃ“N DERECHO"]].map(([key, label]) => (
+        <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 22px", fontWeight: 900 }}>✏️ Editar Inicio</h3>
+        {[["topLabel","ETIQUETA SUPERIOR"],["title","TÍTULO PRINCIPAL"],["subtitle","SUBTÍTULO"],["ctaLeft","BOTÓN IZQUIERDO"],["ctaRight","BOTÓN DERECHO"]].map(([key, label]) => (
           <div key={key} style={{ marginBottom: 14 }}>
             <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>{label}</label>
             {key === "subtitle"
@@ -1079,15 +1025,15 @@ function HeroEditModal({ hero, onSave, onClose }) {
             }
           </div>
         ))}
-        <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>IMÃGENES DE FONDO</label>
+        <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>IMÁGENES DE FONDO</label>
         <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => handleImageFiles(e.target.files)} />
-        <button onClick={() => fileRef.current.click()} style={{ background: C.navy, color: C.white, border: "none", borderRadius: 8, padding: "10px 20px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 14 }}>+ Agregar imÃ¡genes</button>
+        <button onClick={() => fileRef.current.click()} style={{ background: C.navy, color: C.white, border: "none", borderRadius: 8, padding: "10px 20px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 14 }}>+ Agregar imágenes</button>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
           {(fields.images || []).map((img, i) => (
             <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", background: "#f5f5f5", borderRadius: 8, padding: 8 }}>
               <img src={img} alt="" style={{ width: 60, height: 40, objectFit: "cover", borderRadius: 5, flexShrink: 0 }} />
               <span style={{ flex: 1, fontFamily: "Nunito, sans-serif", fontSize: 11, color: "#aaa" }}>Imagen {i + 1}</span>
-              <button onClick={() => setFields(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ background: C.red, color: C.white, border: "none", borderRadius: 5, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>âœ•</button>
+              <button onClick={() => setFields(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ background: C.red, color: C.white, border: "none", borderRadius: 5, padding: "4px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>✕</button>
             </div>
           ))}
         </div>
@@ -1100,19 +1046,19 @@ function HeroEditModal({ hero, onSave, onClose }) {
   );
 }
 
-// â”€â”€ ADMIN PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ADMIN PANEL ────────────────────────────────────────────────────────────
 function AdminPanel({ news, setNews, sports, setSports, activities, setActivities, forms, setForms, members, setMembers, merch, setMerch, commissions, setCommissions, stats, setStats, about, setAbout, social, setSocial, merchEmptyText, setMerchEmptyText, onLogout }) {
   const [tab, setTab] = useState("news");
   const inp = { border: "1.5px solid #ddd", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "Nunito, sans-serif", width: "100%", boxSizing: "border-box", outline: "none" };
-  const [f, setF] = useState({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "FÃºtbol", images: [] });
-  const resetF = () => setF({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "FÃºtbol", images: [] });
+  const [f, setF] = useState({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [] });
+  const resetF = () => setF({ title: "", date: "", excerpt: "", link: "", category: "Institucional", tag: "Fútbol", images: [] });
   const [selMember, setSelMember] = useState(null);
   const [mField, setMField] = useState({ photo: "", career: "" });
   const [mp, setMp] = useState({ name: "", price: "", desc: "", image: "", link: "", isPreorder: false, deadline: "" });
   // Commission editor state
   const [selComId, setSelComId] = useState(null);
   const [comField, setComField] = useState({ name: "", icon: "", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
-  const [newCom, setNewCom] = useState({ name: "", icon: "ðŸ“‹", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
+  const [newCom, setNewCom] = useState({ name: "", icon: "📋", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
 
   const photoRef = useRef();
   const newsImgRef = useRef();
@@ -1120,9 +1066,9 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   const comImgRef = useRef();
 
   const sectionConfig = {
-    news:       { label: "ðŸ“° Noticias",    items: news,       setItems: setNews,       tagLabel: "CategorÃ­a", tagField: "category", tagOptions: ["Institucional","Deportes","Academico","Cultural","General"] },
-    sports:     { label: "âš½ Deportes",    items: sports,     setItems: setSports,     tagLabel: "Deporte",   tagField: "tag",      tagOptions: ["FÃºtbol","Baloncesto","Ping-Pong","Otro"] },
-    activities: { label: "ðŸŽ¯ Actividades", items: activities, setItems: setActivities, tagLabel: "Tipo",      tagField: "tag",      tagOptions: ["Ciencia","Bienestar","Cultural","Academico","General"] },
+    news:       { label: "📰 Noticias",    items: news,       setItems: setNews,       tagLabel: "Categoría", tagField: "category", tagOptions: ["Institucional","Deportes","Academico","Cultural","General"] },
+    sports:     { label: "⚽ Deportes",    items: sports,     setItems: setSports,     tagLabel: "Deporte",   tagField: "tag",      tagOptions: ["Fútbol","Baloncesto","Ping-Pong","Otro"] },
+    activities: { label: "🎯 Actividades", items: activities, setItems: setActivities, tagLabel: "Tipo",      tagField: "tag",      tagOptions: ["Ciencia","Bienestar","Cultural","Academico","General"] },
   };
   const cur = sectionConfig[tab];
 
@@ -1172,7 +1118,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   const addCommission = () => {
     if (!newCom.name) return;
     setCommissions([...commissions, { ...newCom, id: Date.now() }]);
-    setNewCom({ name: "", icon: "ðŸ“‹", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
+    setNewCom({ name: "", icon: "📋", desc: "", detail: "", contact: "", whatsapp: "", instagram: "", joinUrl: "", color: C.navy, images: [] });
   };
   const delCommission = id => setCommissions(commissions.filter(c => c.id !== id));
   const saveCommission = () => {
@@ -1182,9 +1128,9 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   };
 
   const panelTabs = [
-    ["news","ðŸ“° Noticias"],["sports","âš½ Deportes"],["activities","ðŸŽ¯ Actividades"],
-    ["commissions","ðŸ—ï¸ Comisiones"],["forms","ðŸ“‹ Formularios"],["members","ðŸ‘¥ Integrantes"],
-    ["about","â„¹ï¸ QuiÃ©nes Somos"],["stats","ðŸ“Š EstadÃ­sticas"],["social","ðŸŒ Redes"],["merch","ðŸ›ï¸ Merch"]
+    ["news","📰 Noticias"],["sports","⚽ Deportes"],["activities","🎯 Actividades"],
+    ["commissions","🏗️ Comisiones"],["forms","📋 Formularios"],["members","👥 Integrantes"],
+    ["about","ℹ️ Quiénes Somos"],["stats","📊 Estadísticas"],["social","🌐 Redes"],["merch","🛍️ Merch"]
   ];
 
   const colorOptions = [C.navy, C.sky, C.orange, C.red, "#7b5ea7", "#5a9a6f", "#c4a43e"];
@@ -1193,8 +1139,8 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
     <div style={{ background: "#f2f2f5", minHeight: "100vh", padding: "36px 20px" }}>
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-          <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: 0, fontSize: 26, fontWeight: 900 }}>âœï¸ Panel de AdministraciÃ³n</h2>
-          <button onClick={onLogout} style={{ background: C.red, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>Cerrar sesiÃ³n</button>
+          <h2 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: 0, fontSize: 26, fontWeight: 900 }}>✏️ Panel de Administración</h2>
+          <button onClick={onLogout} style={{ background: C.red, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>Cerrar sesión</button>
         </div>
         <div className="admin-tabs" style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
           {panelTabs.map(([k, l]) => (
@@ -1208,10 +1154,10 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar entrada</h3>
               <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                <input style={inp} placeholder="TÃ­tulo *" value={f.title} onChange={e => setF({ ...f, title: e.target.value })} />
+                <input style={inp} placeholder="Título *" value={f.title} onChange={e => setF({ ...f, title: e.target.value })} />
                 <input style={inp} type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} />
               </div>
-              <textarea style={{ ...inp, minHeight: 70, resize: "vertical", marginBottom: 10 }} placeholder="DescripciÃ³n / resumen" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
+              <textarea style={{ ...inp, minHeight: 70, resize: "vertical", marginBottom: 10 }} placeholder="Descripción / resumen" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
               <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Link externo (opcional)" value={f.link} onChange={e => setF({ ...f, link: e.target.value })} />
                 <div>
@@ -1219,17 +1165,17 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                     {cur.tagOptions.map(o => <option key={o}>{o}</option>)}
                   </select>
                   {tab === "sports" && f.tag === "Otro" && (
-                    <input style={{ ...inp, marginTop: 6 }} placeholder="Escribe el deporteâ€¦" value={f.customTag || ""} onChange={e => setF({ ...f, customTag: e.target.value })} />
+                    <input style={{ ...inp, marginTop: 6 }} placeholder="Escribe el deporte…" value={f.customTag || ""} onChange={e => setF({ ...f, customTag: e.target.value })} />
                   )}
                 </div>
               </div>
               <input ref={newsImgRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => addItemImgs(e.target.files)} />
-              <button onClick={() => newsImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 10 }}>ðŸ“· Agregar imÃ¡genes</button>
+              <button onClick={() => newsImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: 10 }}>📷 Agregar imágenes</button>
               {f.images.map((img, i) => (
                 <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
                   <img src={img} alt="" style={{ width: 44, height: 34, objectFit: "cover", borderRadius: 5 }} />
                   <span style={{ flex: 1, fontFamily: "Nunito, sans-serif", fontSize: 12, color: "#aaa" }}>Imagen {i + 1}</span>
-                  <button onClick={() => setF(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ background: C.red, color: C.white, border: "none", borderRadius: 5, padding: "3px 9px", cursor: "pointer", fontSize: 12 }}>âœ•</button>
+                  <button onClick={() => setF(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ background: C.red, color: C.white, border: "none", borderRadius: 5, padding: "3px 9px", cursor: "pointer", fontSize: 12 }}>✕</button>
                 </div>
               ))}
               <button onClick={addItem} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14, marginTop: 8 }}>+ Publicar</button>
@@ -1239,7 +1185,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                 <div key={item.id} style={{ background: C.white, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
                   <div>
                     <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 14 }}>{item.title}</div>
-                    <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12, marginTop: 2 }}>{item.date} Â· {item.category || item.tag} Â· {item.images?.length || 0} img</div>
+                    <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12, marginTop: 2 }}>{item.date} · {item.category || item.tag} · {item.images?.length || 0} img</div>
                   </div>
                   <button onClick={() => delItem(item.id)} style={{ background: C.red, color: C.white, border: "none", borderRadius: 6, padding: "7px 13px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 700 }}>Eliminar</button>
                 </div>
@@ -1253,13 +1199,13 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
           <div>
             {/* Add new commission */}
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar ComisiÃ³n</h3>
+              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar Comisión</h3>
               <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-                <input style={inp} placeholder="Nombre de la comisiÃ³n *" value={newCom.name} onChange={e => setNewCom({ ...newCom, name: e.target.value })} />
-                <input style={inp} placeholder="Ãcono (emoji)" value={newCom.icon} onChange={e => setNewCom({ ...newCom, icon: e.target.value })} />
+                <input style={inp} placeholder="Nombre de la comisión *" value={newCom.name} onChange={e => setNewCom({ ...newCom, name: e.target.value })} />
+                <input style={inp} placeholder="Ícono (emoji)" value={newCom.icon} onChange={e => setNewCom({ ...newCom, icon: e.target.value })} />
               </div>
-              <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="DescripciÃ³n corta (visible en tarjeta)" value={newCom.desc} onChange={e => setNewCom({ ...newCom, desc: e.target.value })} />
-              <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Detalle (visible al abrir la comisiÃ³n)" value={newCom.detail} onChange={e => setNewCom({ ...newCom, detail: e.target.value })} />
+              <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Descripción corta (visible en tarjeta)" value={newCom.desc} onChange={e => setNewCom({ ...newCom, desc: e.target.value })} />
+              <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Detalle (visible al abrir la comisión)" value={newCom.detail} onChange={e => setNewCom({ ...newCom, detail: e.target.value })} />
               <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Email de contacto" value={newCom.contact} onChange={e => setNewCom({ ...newCom, contact: e.target.value })} />
                 <input style={inp} placeholder="WhatsApp (link grupo)" value={newCom.whatsapp} onChange={e => setNewCom({ ...newCom, whatsapp: e.target.value })} />
@@ -1267,7 +1213,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
               <input style={{ ...inp, marginBottom: 10 }} placeholder="Instagram (link perfil)" value={newCom.instagram} onChange={e => setNewCom({ ...newCom, instagram: e.target.value })} />
               <input style={{ ...inp, marginBottom: 10 }} placeholder="Link formulario para unirse (Google Form, etc.)" value={newCom.joinUrl || ""} onChange={e => setNewCom({ ...newCom, joinUrl: e.target.value })} />
               <div style={{ marginBottom: 16 }}>
-                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>COLOR DE LA COMISIÃ“N</label>
+                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>COLOR DE LA COMISIÓN</label>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {colorOptions.map(col => (
                     <button key={col} onClick={() => setNewCom({ ...newCom, color: col })} style={{ width: 32, height: 32, borderRadius: "50%", background: col, border: newCom.color === col ? "3px solid #333" : "3px solid transparent", cursor: "pointer" }} />
@@ -1275,28 +1221,28 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                   <input type="color" value={newCom.color} onChange={e => setNewCom({ ...newCom, color: e.target.value })} style={{ width: 32, height: 32, borderRadius: "50%", border: "none", cursor: "pointer", padding: 0 }} title="Color personalizado" />
                 </div>
               </div>
-              <button onClick={addCommission} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar ComisiÃ³n</button>
+              <button onClick={addCommission} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar Comisión</button>
             </div>
 
             {/* Edit existing commission */}
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar ComisiÃ³n Existente</h3>
+              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar Comisión Existente</h3>
               <select style={{ ...inp, marginBottom: 14 }} value={selComId || ""} onChange={e => {
                 const id = Number(e.target.value);
                 setSelComId(id);
                 const c = commissions.find(x => x.id === id);
                 if (c) setComField({ name: c.name, icon: c.icon, desc: c.desc, detail: c.detail, contact: c.contact || "", whatsapp: c.whatsapp || "", instagram: c.instagram || "", joinUrl: c.joinUrl || "", color: c.color, images: c.images || [] });
               }}>
-                <option value="">SeleccionÃ¡ una comisiÃ³nâ€¦</option>
+                <option value="">Seleccioná una comisión…</option>
                 {commissions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {selComId && (
                 <>
                   <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <input style={inp} placeholder="Nombre *" value={comField.name} onChange={e => setComField({ ...comField, name: e.target.value })} />
-                    <input style={inp} placeholder="Ãcono" value={comField.icon} onChange={e => setComField({ ...comField, icon: e.target.value })} />
+                    <input style={inp} placeholder="Ícono" value={comField.icon} onChange={e => setComField({ ...comField, icon: e.target.value })} />
                   </div>
-                  <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="DescripciÃ³n corta" value={comField.desc} onChange={e => setComField({ ...comField, desc: e.target.value })} />
+                  <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Descripción corta" value={comField.desc} onChange={e => setComField({ ...comField, desc: e.target.value })} />
                   <textarea style={{ ...inp, minHeight: 60, resize: "vertical", marginBottom: 10 }} placeholder="Detalle completo" value={comField.detail} onChange={e => setComField({ ...comField, detail: e.target.value })} />
                   <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                     <input style={inp} placeholder="Email" value={comField.contact} onChange={e => setComField({ ...comField, contact: e.target.value })} />
@@ -1315,14 +1261,14 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                   </div>
                   <button onClick={saveCommission} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>Guardar cambios</button>
                   <div style={{ marginTop: 16 }}>
-                    <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>FOTOS DE LA COMISIÃ“N</label>
+                    <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 8 }}>FOTOS DE LA COMISIÓN</label>
                     <input ref={comImgRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={async e => { const b64s = await Promise.all(Array.from(e.target.files).map(fileToB64)); setComField(prev => ({ ...prev, images: [...(prev.images || []), ...b64s] })); }} />
-                    <button onClick={() => comImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>ðŸ“· Agregar fotos</button>
+                    <button onClick={() => comImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 16px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>📷 Agregar fotos</button>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
                       {(comField.images || []).map((img, i) => (
                         <div key={i} style={{ position: "relative" }}>
                           <img src={img} alt="" style={{ width: 64, height: 48, objectFit: "cover", borderRadius: 6 }} />
-                          <button onClick={() => setComField(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ position: "absolute", top: -4, right: -4, background: C.red, color: C.white, border: "none", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>âœ•</button>
+                          <button onClick={() => setComField(prev => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))} style={{ position: "absolute", top: -4, right: -4, background: C.red, color: C.white, border: "none", borderRadius: "50%", width: 18, height: 18, cursor: "pointer", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
                         </div>
                       ))}
                     </div>
@@ -1350,12 +1296,12 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
         {/* ABOUT EDITOR */}
         {tab === "about" && (
           <div style={{ background: C.white, borderRadius: 16, padding: 26, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar "Â¿QuiÃ©nes Somos?"</h3>
+            <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar "¿Quiénes Somos?"</h3>
             {[
-              ["p1","PÃRRAFO 1 (descripciÃ³n general)"],
-              ["p2","PÃRRAFO 2 (reactivaciÃ³n)"],
-              ["mision","MISIÃ“N"],
-              ["vision","VISIÃ“N"],
+              ["p1","PÁRRAFO 1 (descripción general)"],
+              ["p2","PÁRRAFO 2 (reactivación)"],
+              ["mision","MISIÓN"],
+              ["vision","VISIÓN"],
               ["legado","LEGADO"],
               ["valores","VALORES"],
             ].map(([key, label]) => (
@@ -1364,18 +1310,18 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                 <textarea style={{ ...inp, minHeight: 72, resize: "vertical" }} value={about[key] || ""} onChange={e => setAbout({ ...about, [key]: e.target.value })} />
               </div>
             ))}
-            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>âœ… Los cambios se guardan automÃ¡ticamente.</div>
+            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>✅ Los cambios se guardan automáticamente.</div>
           </div>
         )}
 
         {/* STATS EDITOR */}
         {tab === "stats" && (
           <div style={{ background: C.white, borderRadius: 16, padding: 26, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-            <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar EstadÃ­sticas (barra amarilla)</h3>
+            <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Editar Estadísticas (barra amarilla)</h3>
             {stats.map((s, i) => (
               <div key={s.id} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
                 <div>
-                  <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 4 }}>NÃšMERO / VALOR</label>
+                  <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 4 }}>NÚMERO / VALOR</label>
                   <input style={inp} value={s.value} onChange={e => { const ns = [...stats]; ns[i] = { ...s, value: e.target.value }; setStats(ns); }} />
                 </div>
                 <div>
@@ -1384,7 +1330,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                 </div>
               </div>
             ))}
-            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>âœ… Los cambios se guardan automÃ¡ticamente.</div>
+            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>✅ Los cambios se guardan automáticamente.</div>
           </div>
         )}
 
@@ -1392,19 +1338,19 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
         {tab === "social" && (
           <div style={{ background: C.white, borderRadius: 16, padding: 26, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
             <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", fontWeight: 800 }}>Redes Sociales de ASOSIA</h3>
-            <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#777", marginBottom: 22 }}>Estos links aparecen en la secciÃ³n de inicio y en el pie de pÃ¡gina.</p>
+            <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#777", marginBottom: 22 }}>Estos links aparecen en la sección de inicio y en el pie de página.</p>
             {[
-              ["whatsapp","ðŸ’¬ WhatsApp (link al grupo)","https://chat.whatsapp.com/..."],
-              ["instagram","ðŸ“¸ Instagram (link al perfil)","https://instagram.com/asosia"],
-              ["facebook","ðŸ“˜ Facebook (link a la pÃ¡gina)","https://facebook.com/asosia"],
-              ["email","âœ‰ï¸ Correo electrÃ³nico","asosia@ucr.ac.cr"],
+              ["whatsapp","💬 WhatsApp (link al grupo)","https://chat.whatsapp.com/..."],
+              ["instagram","📸 Instagram (link al perfil)","https://instagram.com/asosia"],
+              ["facebook","📘 Facebook (link a la página)","https://facebook.com/asosia"],
+              ["email","✉️ Correo electrónico","asosia@ucr.ac.cr"],
             ].map(([key, label, placeholder]) => (
               <div key={key} style={{ marginBottom: 14 }}>
                 <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>{label}</label>
                 <input style={inp} placeholder={placeholder} value={social[key] || ""} onChange={e => setSocial({ ...social, [key]: e.target.value })} />
               </div>
             ))}
-            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>âœ… Los cambios se guardan automÃ¡ticamente. Los botones solo aparecen en el sitio si tienen contenido.</div>
+            <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy }}>✅ Los cambios se guardan automáticamente. Los botones solo aparecen en el sitio si tienen contenido.</div>
           </div>
         )}
 
@@ -1415,7 +1361,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar Formulario</h3>
               <input style={{ ...inp, marginBottom: 10 }} placeholder="Nombre del formulario *" value={f.title} onChange={e => setF({ ...f, title: e.target.value })} />
               <input style={{ ...inp, marginBottom: 10 }} placeholder="URL del formulario *" value={f.link} onChange={e => setF({ ...f, link: e.target.value })} />
-              <input style={{ ...inp, marginBottom: 16 }} placeholder="DescripciÃ³n" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
+              <input style={{ ...inp, marginBottom: 16 }} placeholder="Descripción" value={f.excerpt} onChange={e => setF({ ...f, excerpt: e.target.value })} />
               <button onClick={addForm} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar</button>
             </div>
             {forms.map(x => (
@@ -1437,25 +1383,25 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                 const m = members.find(x => x.id === Number(e.target.value));
                 if (m) setMField({ photo: "", career: m.career });
               }}>
-                <option value="">SeleccionÃ¡ un integranteâ€¦</option>
-                {members.map(m => <option key={m.id} value={m.id}>{m.name} â€” {m.role}</option>)}
+                <option value="">Seleccioná un integrante…</option>
+                {members.map(m => <option key={m.id} value={m.id}>{m.name} — {m.role}</option>)}
               </select>
               {selMember && (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 6 }}>FOTO DE PERFIL</div>
                   <input ref={photoRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleMemberPhoto(e.target.files)} />
                   <div style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                    <button onClick={() => photoRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 14px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer", flex: 1 }}>ðŸ“· Subir foto</button>
+                    <button onClick={() => photoRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 14px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer", flex: 1 }}>📷 Subir foto</button>
                     {(mField.photo || members.find(m => m.id === selMember)?.photo) && (
-                      <button onClick={() => { setMField(prev => ({ ...prev, photo: "REMOVE" })); }} style={{ background: C.red, color: C.white, border: "none", borderRadius: 8, padding: "9px 14px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>ðŸ—‘ï¸ Eliminar foto</button>
+                      <button onClick={() => { setMField(prev => ({ ...prev, photo: "REMOVE" })); }} style={{ background: C.red, color: C.white, border: "none", borderRadius: 8, padding: "9px 14px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>🗑️ Eliminar foto</button>
                     )}
                   </div>
                   {mField.photo && mField.photo !== "REMOVE" && <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}><img src={mField.photo} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: "50%", border: `3px solid ${C.sky}`, boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} /></div>}
                   {!mField.photo && members.find(m => m.id === selMember)?.photo && <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}><img src={members.find(m => m.id === selMember).photo} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: "50%", border: `3px solid ${C.sky}`, opacity: 0.6, boxShadow: "0 2px 10px rgba(0,0,0,0.12)" }} /></div>}
-                  {mField.photo === "REMOVE" && <div style={{ background: "#fff0f0", borderRadius: 8, padding: "8px 12px", fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.red, fontWeight: 700 }}>âš ï¸ La foto se eliminarÃ¡ al guardar</div>}
+                  {mField.photo === "REMOVE" && <div style={{ background: "#fff0f0", borderRadius: 8, padding: "8px 12px", fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.red, fontWeight: 700 }}>⚠️ La foto se eliminará al guardar</div>}
                 </div>
               )}
-              <input style={{ ...inp, marginBottom: 16 }} placeholder="Carrera (ej: IngenierÃ­a Industrial)" value={mField.career} onChange={e => setMField({ ...mField, career: e.target.value })} />
+              <input style={{ ...inp, marginBottom: 16 }} placeholder="Carrera (ej: Ingeniería Industrial)" value={mField.career} onChange={e => setMField({ ...mField, career: e.target.value })} />
               <button onClick={updateMember} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>Actualizar</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 14 }}>
@@ -1465,7 +1411,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                     <AnimatedMemberBanner idx={idx} />
                   </div>
                   <div style={{ padding: "8px 10px 14px" }}>
-                    {m.photo ? <img src={m.photo} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", marginBottom: 6, border: "2px solid white", marginTop: -20, display: "block", margin: "-20px auto 6px" }} /> : <div style={{ width: 40, height: 40, borderRadius: "50%", background: BANNER_GRADIENTS[idx % BANNER_GRADIENTS.length], margin: "-20px auto 6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, border: "2px solid white" }}>ðŸ‘¤</div>}
+                    {m.photo ? <img src={m.photo} alt="" style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", marginBottom: 6, border: "2px solid white", marginTop: -20, display: "block", margin: "-20px auto 6px" }} /> : <div style={{ width: 40, height: 40, borderRadius: "50%", background: BANNER_GRADIENTS[idx % BANNER_GRADIENTS.length], margin: "-20px auto 6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, border: "2px solid white" }}>👤</div>}
                     <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 12 }}>{m.name}</div>
                     <div style={{ fontFamily: "Nunito, sans-serif", color: "#aaa", fontSize: 10, marginTop: 2 }}>{m.role}</div>
                   </div>
@@ -1480,38 +1426,38 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
           <div>
             {/* Merch empty state text editor */}
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", fontWeight: 800 }}>Texto "PrÃ³ximamente"</h3>
+              <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", fontWeight: 800 }}>Texto "Próximamente"</h3>
               <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#777", marginBottom: 16 }}>Este texto aparece cuando no hay productos publicados.</p>
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>DESCRIPCIÃ“N PRINCIPAL</label>
+                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>DESCRIPCIÓN PRINCIPAL</label>
                 <textarea style={{ ...inp, minHeight: 80, resize: "vertical" }} value={(merchEmptyText || SEED_MERCH_TEXT).main} onChange={e => setMerchEmptyText({ ...(merchEmptyText || SEED_MERCH_TEXT), main: e.target.value })} />
               </div>
               <div>
-                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>ETIQUETAS DE PRODUCTOS (una por lÃ­nea, con emoji)</label>
+                <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>ETIQUETAS DE PRODUCTOS (una por línea, con emoji)</label>
                 <textarea style={{ ...inp, minHeight: 90, resize: "vertical" }} value={((merchEmptyText || SEED_MERCH_TEXT).items || []).join("\n")} onChange={e => setMerchEmptyText({ ...(merchEmptyText || SEED_MERCH_TEXT), items: e.target.value.split("\n").filter(l => l.trim()) })} />
               </div>
-              <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy, marginTop: 12 }}>âœ… Los cambios se guardan automÃ¡ticamente.</div>
+              <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", fontFamily: "Nunito, sans-serif", fontSize: 13, color: C.navy, marginTop: 12 }}>✅ Los cambios se guardan automáticamente.</div>
             </div>
             <div style={{ background: C.white, borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
               <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 18px", fontWeight: 800 }}>Agregar Producto</h3>
               <div className="admin-input-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                 <input style={inp} placeholder="Nombre del producto *" value={mp.name} onChange={e => setMp({ ...mp, name: e.target.value })} />
-                <input style={inp} placeholder="Precio (â‚¡)" value={mp.price} onChange={e => setMp({ ...mp, price: e.target.value })} />
+                <input style={inp} placeholder="Precio (₡)" value={mp.price} onChange={e => setMp({ ...mp, price: e.target.value })} />
               </div>
-              <input style={{ ...inp, marginBottom: 10 }} placeholder="DescripciÃ³n" value={mp.desc} onChange={e => setMp({ ...mp, desc: e.target.value })} />
+              <input style={{ ...inp, marginBottom: 10 }} placeholder="Descripción" value={mp.desc} onChange={e => setMp({ ...mp, desc: e.target.value })} />
               <input style={{ ...inp, marginBottom: 10 }} placeholder="Link para pedir" value={mp.link} onChange={e => setMp({ ...mp, link: e.target.value })} />
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <input type="checkbox" id="preorder-chk" checked={mp.isPreorder} onChange={e => setMp({ ...mp, isPreorder: e.target.checked })} style={{ width: 18, height: 18, cursor: "pointer" }} />
-                <label htmlFor="preorder-chk" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14, color: C.navy, cursor: "pointer" }}>ðŸŽ« Es Pre-venta</label>
+                <label htmlFor="preorder-chk" style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 14, color: C.navy, cursor: "pointer" }}>🎫 Es Pre-venta</label>
               </div>
               {mp.isPreorder && (
                 <div style={{ marginBottom: 10 }}>
-                  <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>FECHA LÃMITE DE PEDIDO</label>
+                  <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 5 }}>FECHA LÍMITE DE PEDIDO</label>
                   <input style={inp} type="datetime-local" value={mp.deadline} onChange={e => setMp({ ...mp, deadline: e.target.value })} />
                 </div>
               )}
               <input ref={merchImgRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => handleMerchImg(e.target.files)} />
-              <button onClick={() => merchImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: mp.image ? 8 : 16 }}>ðŸ“· Subir imagen del producto</button>
+              <button onClick={() => merchImgRef.current.click()} style={{ background: C.sky, color: C.white, border: "none", borderRadius: 8, padding: "9px 18px", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", marginBottom: mp.image ? 8 : 16 }}>📷 Subir imagen del producto</button>
               {mp.image && <img src={mp.image} alt="" style={{ display: "block", width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, marginBottom: 10 }} />}
               <button onClick={addMerch} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar Producto</button>
             </div>
@@ -1521,7 +1467,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
                   {p.image && <img src={p.image} alt="" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }} />}
                   <div>
                     <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 14 }}>{p.name}</div>
-                    <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12 }}>â‚¡{p.price}</div>
+                    <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12 }}>₡{p.price}</div>
                   </div>
                 </div>
                 <button onClick={() => delMerch(p.id)} style={{ background: C.red, color: C.white, border: "none", borderRadius: 6, padding: "7px 13px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 700 }}>Eliminar</button>
@@ -1534,7 +1480,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   );
 }
 
-// â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── FOOTER ─────────────────────────────────────────────────────────────────
 function Footer({ social, onSecretClick }) {
   const [clicks, setClicks] = useState(0);
   const timerRef = useRef(null);
@@ -1557,29 +1503,29 @@ function Footer({ social, onSecretClick }) {
       <div style={{ position: "relative", zIndex: 1 }}>
         <Logo size={32} dark />
         <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, marginTop: 14, lineHeight: 1.7 }}>
-          AsociaciÃ³n de Estudiantes de la Sede Interuniversitaria de Alajuela<br />
-          Universidad de Costa Rica Â· Junta Directiva 2026-2027
+          Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela<br />
+          Universidad de Costa Rica · Junta Directiva 2026-2027
         </p>
         {(social.whatsapp || social.instagram || social.email || social.facebook) && (
           <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
-            {social.whatsapp && <a href={social.whatsapp} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>ðŸ’¬ WhatsApp</a>}
-            {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>ðŸ“¸ Instagram</a>}
-            {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>ðŸ“˜ Facebook</a>}
-            {social.email && <a href={`mailto:${social.email}`} style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>âœ‰ï¸ {social.email}</a>}
+            {social.whatsapp && <a href={social.whatsapp} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>💬 WhatsApp</a>}
+            {social.instagram && <a href={social.instagram} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>📸 Instagram</a>}
+            {social.facebook && <a href={social.facebook} target="_blank" rel="noreferrer" style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>📘 Facebook</a>}
+            {social.email && <a href={`mailto:${social.email}`} style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Nunito, sans-serif", fontSize: 12, textDecoration: "none", fontWeight: 700 }}>✉️ {social.email}</a>}
           </div>
         )}
         <div
           onClick={handleCopyright}
           style={{ marginTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 18, fontFamily: "Nunito, sans-serif", fontSize: 11, color: clicks > 0 ? `rgba(255,255,255,${0.3 + clicks * 0.12})` : "rgba(255,255,255,0.3)", cursor: "default", userSelect: "none", transition: "color 0.2s" }}
         >
-          Â© 2026-2027 ASOSIA â€” Todos los derechos reservados{clicks > 0 ? " Â·".repeat(clicks) : ""}
+          © 2026-2027 ASOSIA — Todos los derechos reservados{clicks > 0 ? " ·".repeat(clicks) : ""}
         </div>
       </div>
     </footer>
   );
 }
 
-// â”€â”€ ROOT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── ROOT ───────────────────────────────────────────────────────────────────
 export default function App() {
   const [active, setActive]       = useState("Inicio");
   const [isAdmin, setIsAdmin]     = useState(false);
@@ -1630,9 +1576,9 @@ export default function App() {
       <Nav active={navActive} setActive={setActive} isAdmin={isAdmin} onAdminClick={handleAdminClick} />
 
       {active === "Inicio"      && <HeroPage hero={hero} stats={stats} about={about} social={social} setActive={setActive} isAdmin={isAdmin} onEditHero={() => setShowHeroEdit(true)} news={news} sports={sports} activities={activities} />}
-      {active === "Noticias"    && <SectionPage title="Noticias" subtitle="Ãšltimas Noticias" accent={C.red} items={news} tagKey="category" emptyMsg="No hay noticias aÃºn." />}
-      {active === "Deportes"    && <SectionPage title="Deportes" subtitle="ComisiÃ³n de Deportes" accent={C.orange} items={sports} tagKey="tag" emptyMsg="No hay eventos deportivos aÃºn." />}
-      {active === "Actividades" && <SectionPage title="Actividades" subtitle="Eventos y Actividades" accent={C.sky} items={activities} tagKey="tag" emptyMsg="No hay actividades publicadas aÃºn." />}
+      {active === "Noticias"    && <SectionPage title="Noticias" subtitle="Últimas Noticias" accent={C.red} items={news} tagKey="category" emptyMsg="No hay noticias aún." />}
+      {active === "Deportes"    && <SectionPage title="Deportes" subtitle="Comisión de Deportes" accent={C.orange} items={sports} tagKey="tag" emptyMsg="No hay eventos deportivos aún." />}
+      {active === "Actividades" && <SectionPage title="Actividades" subtitle="Eventos y Actividades" accent={C.sky} items={activities} tagKey="tag" emptyMsg="No hay actividades publicadas aún." />}
       {active === "Integrantes" && <IntegrantesPage members={members} />}
       {active === "Comisiones"  && <ComisionesPage commissions={commissions} />}
       {active === "Formularios" && <FormulariosPage forms={forms} />}
@@ -1645,4 +1591,3 @@ export default function App() {
     </div>
   );
 }
-
