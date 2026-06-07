@@ -224,8 +224,7 @@ const SEED_MEMBERS = [
 ];
 
 const SEED_MERCH_TEXT = {
-  main: "La tienda oficial de ASOSIA está en producción. Ropa, accesorios y más con la identidad de la sede — muy pronto.",
-  items: ["👕 Camisetas", "🧢 Gorras", "🎒 Bolsos", "📌 Pines"],
+  main: "La tienda oficial de ASOSIA está en producción. Ropa, accesorios y más con la identidad de la sede — muy pronto."
 };
 
 const SEED_FORMS = [
