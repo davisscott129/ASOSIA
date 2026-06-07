@@ -1106,45 +1106,7 @@ function UsersPanel({ superPassword, isSuperAdmin }) {
   );
 
   const add = () => {
-
-
-  const del = (id) => setUsers(users.filter(u => u.id !== id));
-
-  return (
-    <div>
-      <div style={{ background: "#fff", borderRadius: 16, padding: 26, marginBottom: 20, boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-        <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, margin: "0 0 6px", fontWeight: 800 }}>👤 Usuarios con acceso al panel</h3>
-        <p style={{ fontFamily: "Nunito, sans-serif", fontSize: 13, color: "#777", marginBottom: 20 }}>Cada usuario puede entrar al panel con su propia contraseña.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 4 }}>NOMBRE</label>
-            <input style={inp} placeholder="ej: Keilor" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} />
-          </div>
-          <div>
-            <label style={{ fontFamily: "Nunito, sans-serif", fontSize: 11, fontWeight: 700, color: "#888", display: "block", marginBottom: 4 }}>CONTRASEÑA</label>
-            <input style={inp} placeholder="Contraseña para este usuario" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} />
-          </div>
-        </div>
-        {err && <p style={{ color: C.red, fontFamily: "Nunito, sans-serif", fontSize: 13, margin: "0 0 10px" }}>{err}</p>}
-        <button onClick={add} style={{ background: C.orange, color: "#fff", border: "none", borderRadius: 8, padding: "11px 24px", fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>+ Agregar usuario</button>
-      </div>
-      <div style={{ display: "grid", gap: 8 }}>
-        {users.length === 0
-          ? <div style={{ textAlign: "center", color: "#bbb", fontFamily: "Nunito, sans-serif", fontSize: 14, padding: 32 }}>No hay usuarios adicionales aún.</div>
-          : users.map(u => (
-            <div key={u.id} style={{ background: "#fff", borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 1px 6px rgba(0,0,0,0.05)" }}>
-              <div>
-                <div style={{ fontFamily: "Nunito, sans-serif", fontWeight: 700, color: C.navy, fontSize: 14 }}>👤 {u.name}</div>
-                <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 12, marginTop: 2 }}>{"•".repeat(u.password.length)}</div>
-              </div>
-              <button onClick={() => del(u.id)} style={{ background: C.red, color: "#fff", border: "none", borderRadius: 6, padding: "7px 13px", cursor: "pointer", fontFamily: "Nunito, sans-serif", fontSize: 12, fontWeight: 700 }}>Eliminar</button>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-  );
-}
+    if (!newUser.name || !newUser.password) return setErr("Nombre y contraseña son obligatorios.");
     if (newUser.password === superPassword) return setErr("Esa contraseña no está permitida.");
     if (users.some(u => u.name === newUser.name)) return setErr("Ya existe un usuario con ese nombre.");
     setUsers([...users, { ...newUser, id: Date.now() }]);
