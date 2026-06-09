@@ -187,13 +187,13 @@ useEffect(() => {
         }
         if (item.images && item.images.length > 0) {
           const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
-            if (img.startsWith("data:")) {
-              const imgKey = `${key}_${item.id}_img_${idx}`;
-              await setDoc(doc(db, "asosia_images", imgKey), { value: img });
-              return `REF:${imgKey}`;
-            }
-            return img;
-          }));
+  if (img && typeof img === "string" && img.startsWith("data:")) {
+    const imgKey = `${key}_${item.id}_img_${idx}`;
+    await setDoc(doc(db, "asosia_images", imgKey), { value: img });
+    return `REF:${imgKey}`;
+  }
+  return img || "";
+}));
           itemClean.images = imgRefs;
         }
         return itemClean;
