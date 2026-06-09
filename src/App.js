@@ -592,11 +592,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       {/* ── STATS BAR ── */}
       <div style={{ background: C.cream, position: "relative", overflow: "hidden" }}>
         <BrandPattern opacity={0.07} colors={[C.orange, C.navy, C.red, C.sky]} variant={2} />
-<<<<<<< HEAD
-        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
-=======
-        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
->>>>>>> a9ef714 (fix fileToB64)
+<div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
           {stats.map(s => (
             <div key={s.id} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 36, fontWeight: 900, color: C.navy }}>{s.value}</div>
