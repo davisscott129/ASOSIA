@@ -1311,10 +1311,17 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   };
   const cur = sectionConfig[tab];
 
-  const addItemImgs = async (files) => {
-    const b64s = await Promise.all(Array.from(files).map(fileToB64));
-    setF(prev => ({ ...prev, images: [...prev.images, ...b64s] }));
-  };
+const addItemImgs = async (files) => {
+  const results = await Promise.allSettled(Array.from(files).map(f => fileToB64(f)));
+  const b64s = results
+    .filter(r => r.status === "fulfilled" && r.value && r.value.startsWith("data:"))
+    .map(r => r.value);
+  if (b64s.length === 0) {
+    alert("No se pudo cargar la imagen. Intentá con otro archivo.");
+    return;
+  }
+  setF(prev => ({ ...prev, images: [...prev.images, ...b64s] }));
+};
   const addItem = () => {
     if (!f.title || !f.date) return;
     const tagField = cur?.tagField || "category";
