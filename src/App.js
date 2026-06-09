@@ -606,11 +606,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
       {/* ── ABOUT ── */}
-<<<<<<< HEAD
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "32px 16px" : "64px 24px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
-=======
-      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
->>>>>>> a9ef714 (fix fileToB64)
+<div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "32px 16px" : "64px 24px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
         <div>
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
