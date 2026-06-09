@@ -151,28 +151,24 @@ async function resolveImages(items) {
 }
 function fileToB64(file, maxSize = 1200, quality = 0.82) {
   return new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      console.log("FileReader OK, size:", e.target.result?.length);
-      const img = new Image();
-      img.onload = () => {
-        console.log("Image loaded:", img.width, "x", img.height);
-        let w = img.width, h = img.height;
-        if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
-        else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        const result = canvas.toDataURL("image/jpeg", quality);
-        console.log("Canvas result size:", result?.length, "starts with:", result?.slice(0, 30));
-        res(result);
-      };
-      img.onerror = (err) => { console.error("Image onerror:", err); rej(new Error("Read failed")); };
-      img.src = e.target.result;
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let w = img.width, h = img.height;
+      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+      else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { rej(new Error("Canvas context failed")); return; }
+      ctx.drawImage(img, 0, 0, w, h);
+      const result = canvas.toDataURL("image/jpeg", quality);
+      res(result);
     };
-    reader.onerror = (err) => { console.error("Reader onerror:", err); rej(new Error("Read failed")); };
-    reader.readAsDataURL(file);
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); rej(new Error("Image load failed")); };
+    img.src = objectUrl;
   });
 }
 // ── SEED DATA ──────────────────────────────────────────────────────────────
