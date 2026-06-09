@@ -98,17 +98,22 @@ function useStore(key, seed) {
           await setDoc(doc(db, "asosia_images", `${key}_${item.id}_photo`), { value: item.photo });
           itemClean.photo = `REF:${key}_${item.id}_photo`;
         }
-        if (item.images && item.images.length > 0) {
-          const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
-            if (img.startsWith("data:")) {
-              const imgKey = `${key}_${item.id}_img_${Date.now()}_${idx}`;
-              await setDoc(doc(db, "asosia_images", imgKey), { value: img });
-              return `REF:${imgKey}`;
-            }
-            return img;
-          }));
-          itemClean.images = imgRefs;
-        }
+if (item.images && item.images.length > 0) {
+  const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
+    if (img.startsWith("data:")) {
+      const imgKey = `${key}_${item.id}_img_${Date.now()}_${idx}`;
+      try {
+        await setDoc(doc(db, "asosia_images", imgKey), { value: img });
+        return `REF:${imgKey}`;
+      } catch (e) {
+        console.error("Error guardando imagen, demasiado grande:", e);
+        return img; // guarda el base64 directo como fallback
+      }
+    }
+    return img;
+  }));
+  itemClean.images = imgRefs;
+}
         return itemClean;
       }));
       setVal(v);
