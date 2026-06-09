@@ -504,26 +504,31 @@ function RecentFeed({ news, sports, activities, setActive }) {
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
-          {all.map(item => (
-            <div key={`${item._section}-${item.id}`} className="card-hover" style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07)" }}>
-              {item.images && item.images.length > 0
-                ? <img src={item.images[0]} alt="" style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
-                : <div style={{ height: 120, background: `linear-gradient(135deg, ${CAT_COLORS[item._tag] || C.navy}, ${C.sky}20)`, position: "relative", overflow: "hidden" }}>
-                    <BrandPattern opacity={0.18} colors={[CAT_COLORS[item._tag] || C.navy, C.sky, C.cream, C.orange]} variant={item.id % 4} />
-                  </div>
-              }
-              <div style={{ padding: "16px 20px 20px" }}>
-                <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                  <span style={{ background: sectionColor[item._section] || C.navy, color: C.white, borderRadius: 10, padding: "2px 10px", fontSize: 10, fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>{item._section}</span>
-                  {item._tag && <span style={{ background: `${CAT_COLORS[item._tag] || C.sky}22`, color: CAT_COLORS[item._tag] || C.sky, borderRadius: 10, padding: "2px 10px", fontSize: 10, fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>{item._tag}</span>}
-                </div>
-                <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
-                <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 15, margin: "0 0 8px", fontWeight: 800, lineHeight: 1.3 }}>{item.title}</h3>
-<p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.excerpt}</p>
-                    
-              </div>
+{all.map(item => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div key={`${item._section}-${item.id}`}>
+      <div className="card-hover" onClick={() => setOpen(true)} style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07)", cursor: "pointer" }}>
+        {item.images && item.images.length > 0
+          ? <img src={item.images[0]} alt="" style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
+          : <div style={{ height: 120, background: `linear-gradient(135deg, ${CAT_COLORS[item._tag] || C.navy}, ${C.sky}20)`, position: "relative", overflow: "hidden" }}>
+              <BrandPattern opacity={0.18} colors={[CAT_COLORS[item._tag] || C.navy, C.sky, C.cream, C.orange]} variant={item.id % 4} />
             </div>
-          ))}
+        }
+        <div style={{ padding: "16px 20px 20px" }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+            <span style={{ background: sectionColor[item._section] || C.navy, color: C.white, borderRadius: 10, padding: "2px 10px", fontSize: 10, fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>{item._section}</span>
+            {item._tag && <span style={{ background: `${CAT_COLORS[item._tag] || C.sky}22`, color: CAT_COLORS[item._tag] || C.sky, borderRadius: 10, padding: "2px 10px", fontSize: 10, fontFamily: "Nunito, sans-serif", fontWeight: 700 }}>{item._tag}</span>}
+          </div>
+          <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
+          <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 15, margin: "0 0 8px", fontWeight: 800, lineHeight: 1.3 }}>{item.title}</h3>
+          <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.excerpt}</p>
+        </div>
+      </div>
+      {open && <DetailModal item={item} tagKey="_tag" onClose={() => setOpen(false)} setActive={setActive} />}
+    </div>
+  );
+})}
         </div>
       </div>
     </div>
