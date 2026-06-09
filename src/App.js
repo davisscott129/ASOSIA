@@ -744,7 +744,10 @@ function ContentCard({ item, tagKey, setActive }) {
       <div style={{ padding: "18px 22px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
         <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 11, marginBottom: 6, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
         <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 10px", fontWeight: 800, lineHeight: 1.3 }}>{item.title}</h3>
-        <p style={{ fontFamily: "Nunito, sans-serif", color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0, flex: 1 }}>{item.excerpt}</p>
+<p style={{ fontFamily: "Nunito, sans-serif", color: "#666", fontSize: 13, lineHeight: 1.7, margin: 0, 
+  display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+  {item.excerpt}
+</p>
         {item.link && <a href={item.link} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} style={{ marginTop: 14, display: "inline-block", background: C.orange, color: C.white, borderRadius: 8, padding: "9px 18px", textDecoration: "none", fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13 }}>Ver más →</a>}
         <span style={{ marginTop: 10, fontFamily: "Nunito, sans-serif", fontSize: 12, color: C.sky, fontWeight: 700, cursor: "pointer" }}>Abrir nota {item.images?.length > 0 ? `· ${item.images.length} foto${item.images.length > 1 ? "s" : ""}` : ""} →</span>
       </div>
