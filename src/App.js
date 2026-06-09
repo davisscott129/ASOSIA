@@ -242,24 +242,27 @@ async function resolveImages(items) {
 }
 function fileToB64(file, maxSize = 1200, quality = 0.82) {
   return new Promise((res, rej) => {
-    const objectUrl = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      let w = img.width, h = img.height;
-      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
-      else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { rej(new Error("Canvas context failed")); return; }
-      ctx.drawImage(img, 0, 0, w, h);
-      const result = canvas.toDataURL("image/jpeg", quality);
-      res(result);
+    const reader = new FileReader();
+    reader.onerror = () => rej(new Error("FileReader failed"));
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const img = new Image();
+      img.onerror = () => rej(new Error("Image load failed"));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { rej(new Error("Canvas context failed")); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        res(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = dataUrl;
     };
-    img.onerror = () => { URL.revokeObjectURL(objectUrl); rej(new Error("Image load failed")); };
-    img.src = objectUrl;
+    reader.readAsDataURL(file);
   });
 }
 // ── SEED DATA ──────────────────────────────────────────────────────────────
