@@ -153,8 +153,10 @@ function fileToB64(file, maxSize = 1200, quality = 0.82) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = (e) => {
+      console.log("FileReader OK, size:", e.target.result?.length);
       const img = new Image();
       img.onload = () => {
+        console.log("Image loaded:", img.width, "x", img.height);
         let w = img.width, h = img.height;
         if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
         else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
@@ -162,12 +164,14 @@ function fileToB64(file, maxSize = 1200, quality = 0.82) {
         canvas.width = w;
         canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        res(canvas.toDataURL("image/jpeg", quality));
+        const result = canvas.toDataURL("image/jpeg", quality);
+        console.log("Canvas result size:", result?.length, "starts with:", result?.slice(0, 30));
+        res(result);
       };
-      img.onerror = () => rej(new Error("Read failed"));
+      img.onerror = (err) => { console.error("Image onerror:", err); rej(new Error("Read failed")); };
       img.src = e.target.result;
     };
-    reader.onerror = () => rej(new Error("Read failed"));
+    reader.onerror = (err) => { console.error("Reader onerror:", err); rej(new Error("Read failed")); };
     reader.readAsDataURL(file);
   });
 }
