@@ -519,7 +519,8 @@ function RecentFeed({ news, sports, activities, setActive }) {
                 </div>
                 <div style={{ fontFamily: "Nunito, sans-serif", color: "#bbb", fontSize: 11, marginBottom: 5, fontWeight: 600 }}>{new Date(item.date + "T12:00:00").toLocaleDateString("es-CR", { year: "numeric", month: "long", day: "numeric" })}</div>
                 <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 15, margin: "0 0 8px", fontWeight: 800, lineHeight: 1.3 }}>{item.title}</h3>
-                <p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, lineHeight: 1.6, margin: 0 }}>{item.excerpt}</p>
+<p style={{ fontFamily: "Nunito, sans-serif", color: "#777", fontSize: 13, lineHeight: 1.6, margin: 0, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.excerpt}</p>
+                    
               </div>
             </div>
           ))}
