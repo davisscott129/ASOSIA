@@ -145,23 +145,12 @@ async function resolveImages(items) {
     return resolved;
   }));
 }
-function fileToB64(file, maxSize = 1200, quality = 0.82) {
+function fileToB64(file) {
   return new Promise((res, rej) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
-      else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      res(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = () => rej(new Error("Read failed"));
-    img.src = url;
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result);
+    reader.onerror = () => rej(new Error("Read failed"));
+    reader.readAsDataURL(file);
   });
 }
 // ── SEED DATA ──────────────────────────────────────────────────────────────
