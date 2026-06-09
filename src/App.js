@@ -124,17 +124,23 @@ async function resolveImages(items) {
   return Promise.all(items.map(async (item) => {
     const resolved = { ...item };
     if (item.image && item.image.startsWith("REF:")) {
-      const snap = await getDoc(doc(db, "asosia_images", item.image.slice(4)));
+      const refKey = item.image.slice(4);
+      const snap = await getDoc(doc(db, "asosia_images", refKey));
+      console.log("REF image:", refKey, "exists:", snap.exists());
       resolved.image = snap.exists() ? snap.data().value : "";
     }
     if (item.photo && item.photo.startsWith("REF:")) {
-      const snap = await getDoc(doc(db, "asosia_images", item.photo.slice(4)));
+      const refKey = item.photo.slice(4);
+      const snap = await getDoc(doc(db, "asosia_images", refKey));
+      console.log("REF photo:", refKey, "exists:", snap.exists());
       resolved.photo = snap.exists() ? snap.data().value : "";
     }
     if (item.images && item.images.length > 0) {
       resolved.images = await Promise.all(item.images.map(async (img) => {
         if (img.startsWith("REF:")) {
-          const snap = await getDoc(doc(db, "asosia_images", img.slice(4)));
+          const refKey = img.slice(4);
+          const snap = await getDoc(doc(db, "asosia_images", refKey));
+          console.log("REF img:", refKey, "exists:", snap.exists());
           return snap.exists() ? snap.data().value : "";
         }
         return img;
