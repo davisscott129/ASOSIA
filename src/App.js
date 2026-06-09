@@ -33,7 +33,7 @@ style.textContent = `
   .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.14) !important; }
 
-<<<<<<< HEAD
+ HEAD
 =======
   /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 768px) {
