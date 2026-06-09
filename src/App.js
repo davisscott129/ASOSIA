@@ -145,7 +145,7 @@ async function resolveImages(items) {
     return resolved;
   }));
 }
-function fileToB64(file, maxSize = 800, quality = 0.75) {
+function fileToB64(file, maxSize = 500, quality = 0.5) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = (e) => {
