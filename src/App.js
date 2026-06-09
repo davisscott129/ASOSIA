@@ -33,6 +33,68 @@ style.textContent = `
   .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.14) !important; }
 
+<<<<<<< HEAD
+=======
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 768px) {
+    /* Nav: scrollable horizontal en móvil */
+    .nav-tabs-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex-wrap: nowrap !important;
+      max-width: calc(100vw - 120px);
+    }
+    .nav-tabs-container::-webkit-scrollbar { display: none; }
+
+    /* About grid: una columna en móvil */
+    .about-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+
+    /* Stats: 2 columnas en móvil */
+    .stats-bar { justify-content: center !important; gap: 0 !important; }
+    .stats-bar > div { width: 50%; padding: 10px 0; }
+
+    /* Recent feed botones */
+    .recent-feed-header { flex-direction: column !important; align-items: flex-start !important; gap: 14px !important; }
+
+    /* Section pages: padding reducido */
+    .section-inner { padding: 40px 16px !important; }
+
+    /* Member grid: 2 columnas */
+    .members-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+    /* Commission grid: 1 columna */
+    .commissions-grid { grid-template-columns: 1fr !important; }
+
+    /* Formularios card: columna */
+    .form-card { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+    .form-card a { width: 100%; text-align: center; }
+
+    /* Merch empty: padding */
+    .merch-empty { padding: 48px 20px !important; }
+    .merch-empty h2 { font-size: 36px !important; }
+
+    /* Hero CTA buttons: stack vertical */
+    .hero-cta { flex-direction: column !important; align-items: center !important; }
+    .hero-cta button { width: 100%; max-width: 320px; }
+
+    /* Social buttons: columna */
+    .social-buttons { flex-direction: column !important; align-items: center !important; }
+    .social-buttons a { width: 100%; max-width: 280px; justify-content: center; }
+
+    /* Admin panel tabs: scroll horizontal */
+    .admin-tabs { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 6px; }
+    .admin-tabs::-webkit-scrollbar { display: none; }
+
+    /* Admin grid inputs: una columna */
+    .admin-input-grid { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 480px) {
+    .members-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .hero-title { font-size: 52px !important; }
+  }
+>>>>>>> a9ef714 (fix fileToB64)
 `;
 document.head.appendChild(style);
 
@@ -322,6 +384,7 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
   return (
     <nav style={{ background: C.navy, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 20px rgba(0,0,0,0.35)" }}>
       <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 8 }}>
+<<<<<<< HEAD
         <button onClick={() => handleTab("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} dark />
         </button>
@@ -373,14 +436,34 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 15,
               borderLeft: active === t ? `3px solid ${C.orange}` : "3px solid transparent",
               marginBottom: 2, transition: "all 0.15s",
+=======
+        <button onClick={() => setActive("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
+          <Logo size={36} dark />
+        </button>
+        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+          {tabs.map(t => (
+            <button key={t} onClick={() => setActive(t)} className="nav-btn" style={{
+              background: active === t ? C.orange : "transparent",
+              color: active === t ? C.white : "rgba(255,255,255,0.78)",
+              border: "none", borderRadius: 6, padding: "7px 11px", cursor: "pointer",
+              fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, transition: "all 0.18s",
+              whiteSpace: "nowrap",
+>>>>>>> a9ef714 (fix fileToB64)
             }}>{t}</button>
           ))}
           {isAdmin && (
             <button onClick={() => { onAdminClick(); setMenuOpen(false); }} style={{
               display: "block", width: "100%", textAlign: "left",
               background: C.orange, color: C.white,
+<<<<<<< HEAD
               border: "none", borderRadius: 8, padding: "12px 16px", cursor: "pointer",
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 15, marginTop: 8,
+=======
+              border: `1px solid ${C.orange}`,
+              borderRadius: 6, padding: "7px 10px", cursor: "pointer",
+              fontSize: 12, fontFamily: "Nunito, sans-serif", fontWeight: 700, transition: "all 0.18s",
+              whiteSpace: "nowrap",
+>>>>>>> a9ef714 (fix fileToB64)
             }}>✏️ Editor</button>
           )}
         </div>
@@ -478,7 +561,11 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.72)", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.75, fontFamily: "Nunito, sans-serif" }}>
             {hero.subtitle}
           </p>
+<<<<<<< HEAD
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
+=======
+          <div className="hero-cta" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+>>>>>>> a9ef714 (fix fileToB64)
             <button onClick={() => setActive("Noticias")} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 18px rgba(243,150,63,0.4)" }}>
               {hero.ctaLeft || "Últimas Noticias →"}
             </button>
@@ -504,7 +591,11 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       {/* ── STATS BAR ── */}
       <div style={{ background: C.cream, position: "relative", overflow: "hidden" }}>
         <BrandPattern opacity={0.07} colors={[C.orange, C.navy, C.red, C.sky]} variant={2} />
+<<<<<<< HEAD
         <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
+=======
+        <div className="stats-bar" style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "28px 24px", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
+>>>>>>> a9ef714 (fix fileToB64)
           {stats.map(s => (
             <div key={s.id} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "Nunito, sans-serif", fontSize: 36, fontWeight: 900, color: C.navy }}>{s.value}</div>
@@ -518,7 +609,11 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
       <RecentFeed news={news} sports={sports} activities={activities} setActive={setActive} />
 
       {/* ── ABOUT ── */}
+<<<<<<< HEAD
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "32px 16px" : "64px 24px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
+=======
+      <div className="about-grid" style={{ maxWidth: 1100, margin: "0 auto", padding: "64px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
+>>>>>>> a9ef714 (fix fileToB64)
         <div>
           <div style={{ color: C.orange, fontFamily: "Nunito, sans-serif", fontWeight: 800, fontSize: 12, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>¿Quiénes somos?</div>
           <h2 style={{ fontFamily: "Nunito, sans-serif", fontSize: 34, color: C.navy, margin: "0 0 18px", fontWeight: 900, lineHeight: 1.2 }}>La asociación estudiantil de la SIA</h2>
@@ -951,10 +1046,14 @@ function FormulariosPage({ forms }) {
         : <div style={{ display: "grid", gap: 18 }}>
             {forms.map(f => (
               <div key={f.id} className="card-hover form-card" style={{ background: C.white, borderRadius: 16, padding: "24px 28px", boxShadow: "0 2px 14px rgba(0,0,0,0.07)", display: "flex", gap: 20, alignItems: "center" }}>
+<<<<<<< HEAD
                <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, position: "relative" }}>
                 📋
                 <span style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", background: C.orange, color: C.white, fontFamily: "Nunito, sans-serif", fontWeight: 900, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>{forms.indexOf(f) + 1}</span>
               </div>
+=======
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: C.navy, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>📋</div>
+>>>>>>> a9ef714 (fix fileToB64)
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontFamily: "Nunito, sans-serif", color: C.navy, fontSize: 17, margin: "0 0 4px", fontWeight: 800 }}>{f.title}</h3>
                   <p style={{ fontFamily: "Nunito, sans-serif", color: "#888", fontSize: 13, margin: 0 }}>{f.description}</p>
@@ -1252,7 +1351,11 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   };
   const delMerch = id => setMerch(merch.filter(x => x.id !== id));
 
+<<<<<<< HEAD
   const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0], 600, 0.78); setMField(prev => ({ ...prev, photo: b64 })); };
+=======
+  const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0]); setMField(prev => ({ ...prev, photo: b64 })); };
+>>>>>>> a9ef714 (fix fileToB64)
   const handleMerchImg = async (files) => { const b64 = await fileToB64(files[0]); setMp(prev => ({ ...prev, image: b64 })); };
 
   const updateMember = () => {
