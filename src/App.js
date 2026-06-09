@@ -145,10 +145,24 @@ async function resolveImages(items) {
     return resolved;
   }));
 }
-function fileToB64(file) {
+function fileToB64(file, maxSize = 800, quality = 0.75) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
-    reader.onload = () => res(reader.result);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > h && w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; }
+        else if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        res(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => rej(new Error("Read failed"));
+      img.src = e.target.result;
+    };
     reader.onerror = () => rej(new Error("Read failed"));
     reader.readAsDataURL(file);
   });
