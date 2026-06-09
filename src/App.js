@@ -101,7 +101,7 @@ function useStore(key, seed) {
         if (item.images && item.images.length > 0) {
           const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
             if (img.startsWith("data:")) {
-              const imgKey = `${key}_${item.id}_img_${idx}`;
+              const imgKey = `${key}_${item.id}_img_${Date.now()}_${idx}`;
               await setDoc(doc(db, "asosia_images", imgKey), { value: img });
               return `REF:${imgKey}`;
             }
@@ -145,7 +145,7 @@ async function resolveImages(items) {
     return resolved;
   }));
 }
-function fileToB64(file, maxSize = 500, quality = 0.5) {
+function fileToB64(file, maxSize = 1200, quality = 0.82) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
     reader.onload = (e) => {
