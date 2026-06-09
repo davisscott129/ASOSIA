@@ -1340,11 +1340,7 @@ function AdminPanel({ news, setNews, sports, setSports, activities, setActivitie
   };
   const delMerch = id => setMerch(merch.filter(x => x.id !== id));
 
-<<<<<<< HEAD
-  const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0], 600, 0.78); setMField(prev => ({ ...prev, photo: b64 })); };
-=======
-  const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0]); setMField(prev => ({ ...prev, photo: b64 })); };
->>>>>>> a9ef714 (fix fileToB64)
+const handleMemberPhoto = async (files) => { const b64 = await fileToB64(files[0], 600, 0.78); setMField(prev => ({ ...prev, photo: b64 })); };
   const handleMerchImg = async (files) => { const b64 = await fileToB64(files[0]); setMp(prev => ({ ...prev, image: b64 })); };
 
   const updateMember = () => {
