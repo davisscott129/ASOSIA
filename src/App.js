@@ -33,8 +33,6 @@ style.textContent = `
   .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
   .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.14) !important; }
 
- HEAD
-=======
   /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 768px) {
     /* Nav: scrollable horizontal en móvil */
@@ -94,7 +92,7 @@ style.textContent = `
     .members-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .hero-title { font-size: 52px !important; }
   }
->>>>>>> a9ef714 (fix fileToB64)
+
 `;
 document.head.appendChild(style);
 
@@ -676,9 +674,9 @@ function DetailModal({ item, tagKey, onClose, setActive }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.white, borderRadius: 20, maxWidth: 560, width: "100%", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
-        {hasImgs ? (
-          <div style={{ position: "relative" }}>
-            <img src={item.images[imgIdx]} alt="" style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: "20px 20px 0 0", display: "block" }} />
+        {hasImgs && !item.images[imgIdx]?.startsWith("REF:") ? (
+  <div style={{ position: "relative" }}>
+    <img src={item.images[imgIdx]} alt="" style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: "20px 20px 0 0", display: "block" }} />
             {item.images.length > 1 && (
               <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 6 }}>
                 {item.images.map((_, i) => (
@@ -720,14 +718,14 @@ function ContentCard({ item, tagKey, setActive }) {
   return (
     <>
     <div className="card-hover" onClick={() => setOpen(true)} style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", cursor: "pointer" }}>
-      {hasImgs ? (
-        <div style={{ position: "relative" }}>
-<img 
-  key={item.images[imgIdx]} 
-  src={item.images[imgIdx]?.startsWith("REF:") ? undefined : item.images[imgIdx]} 
-  alt="" 
-  style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} 
-/>
+{hasImgs && !item.images[imgIdx]?.startsWith("REF:") ? (
+  <div style={{ position: "relative" }}>
+    <img
+      key={item.images[imgIdx]}
+      src={item.images[imgIdx]}
+      alt=""
+      style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }}
+    />
           {item.images.length > 1 && (
             <div style={{ position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 5 }}>
               {item.images.map((_, i) => (
