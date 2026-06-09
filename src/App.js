@@ -412,13 +412,11 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
 
   return (
     <nav style={{ background: C.navy, position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 20px rgba(0,0,0,0.35)" }}>
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 8 }}>
-<<<<<<< HEAD
+<div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 8 }}>
         <button onClick={() => handleTab("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
           <Logo size={36} dark />
         </button>
 
-        {/* Desktop: tabs normales */}
         {!isMobile && (
           <div style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
             {tabs.map(t => (
@@ -440,7 +438,6 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
           </div>
         )}
 
-        {/* Mobile: botón hamburguesa */}
         {isMobile && (
           <button onClick={() => setMenuOpen(o => !o)} style={{
             background: "none", border: "none", cursor: "pointer", padding: "8px",
@@ -453,7 +450,6 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
         )}
       </div>
 
-      {/* Mobile: menú desplegable */}
       {isMobile && menuOpen && (
         <div style={{ background: C.navy, borderTop: "1px solid rgba(255,255,255,0.1)", padding: "8px 12px 16px" }}>
           {tabs.map(t => (
@@ -465,34 +461,14 @@ function Nav({ active, setActive, isAdmin, onAdminClick }) {
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 15,
               borderLeft: active === t ? `3px solid ${C.orange}` : "3px solid transparent",
               marginBottom: 2, transition: "all 0.15s",
-=======
-        <button onClick={() => setActive("Inicio")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", flexShrink: 0 }}>
-          <Logo size={36} dark />
-        </button>
-        <div className="nav-tabs-container" style={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-          {tabs.map(t => (
-            <button key={t} onClick={() => setActive(t)} className="nav-btn" style={{
-              background: active === t ? C.orange : "transparent",
-              color: active === t ? C.white : "rgba(255,255,255,0.78)",
-              border: "none", borderRadius: 6, padding: "7px 11px", cursor: "pointer",
-              fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 13, transition: "all 0.18s",
-              whiteSpace: "nowrap",
->>>>>>> a9ef714 (fix fileToB64)
             }}>{t}</button>
           ))}
           {isAdmin && (
             <button onClick={() => { onAdminClick(); setMenuOpen(false); }} style={{
               display: "block", width: "100%", textAlign: "left",
               background: C.orange, color: C.white,
-<<<<<<< HEAD
               border: "none", borderRadius: 8, padding: "12px 16px", cursor: "pointer",
               fontFamily: "Nunito, sans-serif", fontWeight: 700, fontSize: 15, marginTop: 8,
-=======
-              border: `1px solid ${C.orange}`,
-              borderRadius: 6, padding: "7px 10px", cursor: "pointer",
-              fontSize: 12, fontFamily: "Nunito, sans-serif", fontWeight: 700, transition: "all 0.18s",
-              whiteSpace: "nowrap",
->>>>>>> a9ef714 (fix fileToB64)
             }}>✏️ Editor</button>
           )}
         </div>
