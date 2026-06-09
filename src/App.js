@@ -130,16 +130,44 @@ async function checkAdminPassword(pw) {
 function useStore(key, seed) {
   const [val, setVal] = useState(seed);
 
-  useEffect(() => {
+useEffect(() => {
     const unsub = onSnapshot(doc(db, "asosia", key), (snap) => {
-     if (snap.exists()) {
-  const data = snap.data().value;
-  if (Array.isArray(data)) {
-    resolveImages(data).then(setVal);
-  } else {
-    setVal(data);
-  }
-} else {
+      if (snap.exists()) {
+        const data = snap.data().value;
+        if (Array.isArray(data)) {
+          // Si los datos de Firestore tienen REFs, resolver
+          // pero solo actualizar el estado si no tenemos ya el base64 en memoria
+          const hasRefs = data.some(item =>
+            (item.image && item.image.startsWith("REF:")) ||
+            (item.photo && item.photo.startsWith("REF:")) ||
+            (item.images && item.images.some(i => i.startsWith("REF:")))
+          );
+          if (hasRefs) {
+            resolveImages(data).then(resolved => {
+              setVal(prev => {
+                // Si el estado actual ya tiene base64s reales, no pisar con vacíos
+                if (!Array.isArray(prev)) return resolved;
+                return resolved.map(resolvedItem => {
+                  const existing = prev.find(p => p.id === resolvedItem.id);
+                  if (!existing) return resolvedItem;
+                  return {
+                    ...resolvedItem,
+                    image: resolvedItem.image || existing.image,
+                    photo: resolvedItem.photo || existing.photo,
+                    images: resolvedItem.images?.map((img, idx) =>
+                      img || (existing.images?.[idx] ?? "")
+                    ) ?? existing.images,
+                  };
+                });
+              });
+            });
+          } else {
+            setVal(data);
+          }
+        } else {
+          setVal(data);
+        }
+      } else {
         setVal(seed);
       }
     });
@@ -172,6 +200,7 @@ function useStore(key, seed) {
         }
         return itemClean;
       }));
+      await new Promise(r => setTimeout(r, 600));
       await setDoc(doc(db, "asosia", key), { value: clean });
     } else {
       setVal(v);
