@@ -566,11 +566,7 @@ function HeroPage({ hero, stats, about, social, setActive, isAdmin, onEditHero, 
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.72)", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.75, fontFamily: "Nunito, sans-serif" }}>
             {hero.subtitle}
           </p>
-<<<<<<< HEAD
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
-=======
-          <div className="hero-cta" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
->>>>>>> a9ef714 (fix fileToB64)
+<div style={{ display: "flex", gap: 14, justifyContent: "center", flexDirection: isMobile ? "column" : "row", alignItems: "center" }}>
             <button onClick={() => setActive("Noticias")} style={{ background: C.orange, color: C.white, border: "none", borderRadius: 10, padding: "14px 32px", fontSize: 15, fontFamily: "Nunito, sans-serif", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 18px rgba(243,150,63,0.4)" }}>
               {hero.ctaLeft || "Últimas Noticias →"}
             </button>
