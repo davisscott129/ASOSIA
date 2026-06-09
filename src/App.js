@@ -84,12 +84,11 @@ function useStore(key, seed) {
     return () => unsub();
   }, [key]);
 
-  const update = async (v) => {
-    // Si es un array, separar las imágenes en documentos aparte
+ const update = async (v) => {
     if (Array.isArray(v)) {
+      setVal(v);
       const clean = await Promise.all(v.map(async (item) => {
         const itemClean = { ...item };
-        // Guardar imagen del item en documento separado
         if (item.image && item.image.startsWith("data:")) {
           await setDoc(doc(db, "asosia_images", `${key}_${item.id}_image`), { value: item.image });
           itemClean.image = `REF:${key}_${item.id}_image`;
@@ -98,25 +97,19 @@ function useStore(key, seed) {
           await setDoc(doc(db, "asosia_images", `${key}_${item.id}_photo`), { value: item.photo });
           itemClean.photo = `REF:${key}_${item.id}_photo`;
         }
-if (item.images && item.images.length > 0) {
-  const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
-    if (img.startsWith("data:")) {
-      const imgKey = `${key}_${item.id}_img_${Date.now()}_${idx}`;
-      try {
-        await setDoc(doc(db, "asosia_images", imgKey), { value: img });
-        return `REF:${imgKey}`;
-      } catch (e) {
-        console.error("Error guardando imagen, demasiado grande:", e);
-        return img; // guarda el base64 directo como fallback
-      }
-    }
-    return img;
-  }));
-  itemClean.images = imgRefs;
-}
+        if (item.images && item.images.length > 0) {
+          const imgRefs = await Promise.all(item.images.map(async (img, idx) => {
+            if (img.startsWith("data:")) {
+              const imgKey = `${key}_${item.id}_img_${idx}`;
+              await setDoc(doc(db, "asosia_images", imgKey), { value: img });
+              return `REF:${imgKey}`;
+            }
+            return img;
+          }));
+          itemClean.images = imgRefs;
+        }
         return itemClean;
       }));
-      setVal(v);
       await setDoc(doc(db, "asosia", key), { value: clean });
     } else {
       setVal(v);
