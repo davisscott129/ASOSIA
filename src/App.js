@@ -633,7 +633,12 @@ function ContentCard({ item, tagKey, setActive }) {
     <div className="card-hover" onClick={() => setOpen(true)} style={{ background: C.white, borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 16px rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", cursor: "pointer" }}>
       {hasImgs ? (
         <div style={{ position: "relative" }}>
-          <img src={item.images[imgIdx]} alt="" style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+         <img 
+  key={item.images[imgIdx]?.slice(0, 40)} 
+  src={item.images[imgIdx]} 
+  alt="" 
+  style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} 
+/>
           {item.images.length > 1 && (
             <div style={{ position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 5 }}>
               {item.images.map((_, i) => (
