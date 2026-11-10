@@ -13,7 +13,16 @@ export default function Inventario() {
   const [buscar, setBuscar] = useState('')
   const [editando, setEditando] = useState(null)
   const [ajustando, setAjustando] = useState(null)
-  const carga = useCarga(() => api.list('productos', { orden: ['nombre'] }))
+  const carga = useCarga(async () => {
+    const [productos, existencias] = await Promise.all([
+      api.list('productos', { orden: ['nombre'] }),
+      esStaff ? api.list('existencias') : [],
+    ])
+    const rep = new Map()
+    ;(existencias || []).forEach((e) => rep.set(e.producto_id, (rep.get(e.producto_id) || 0) + Number(e.cantidad)))
+    productos.forEach((p) => { p.repartido = rep.get(p.id) || 0 })
+    return productos
+  }, [esStaff])
 
   const t = buscar.trim().toLowerCase()
   const todos = carga.data || []
@@ -49,7 +58,7 @@ export default function Inventario() {
                 titulo={nombreProducto(p)}
                 sub={`${p.categoria} · ${colones(p.precio)}${esStaff && !p.es_servicio ? ` · costo ${colones(p.costo)}` : ''}`}
                 derecha={p.es_servicio ? 'servicio' : `${p.stock} u`}
-                derechaSub={!p.es_servicio && p.stock <= p.stock_minimo ? 'reponer' : null}
+                derechaSub={p.es_servicio ? null : [p.repartido > 0 ? `${p.stock - p.repartido} en bodega` : null, p.stock <= p.stock_minimo ? 'reponer' : null].filter(Boolean).join(' · ') || null}
                 tono={!p.es_servicio && p.stock <= p.stock_minimo ? 'alerta' : null} />
             ))}
           </Lista>

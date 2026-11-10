@@ -1,5 +1,5 @@
 import { HashRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import { Home, ReceiptText, Plus, Users, LayoutGrid, Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, KeyRound } from 'lucide-react'
+import { Home, ReceiptText, Plus, Users, LayoutGrid, Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, KeyRound, Boxes } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth'
 import { AvisoProvider, Marca } from './ui'
 import { api, activarDemo, puedeSalirDeDemo } from './data/api'
@@ -17,6 +17,7 @@ import Finanzas from './pages/Finanzas'
 import Metas from './pages/Metas'
 import Usuarios from './pages/Usuarios'
 import Cuenta, { CrearClave } from './pages/Cuenta'
+import Reparto from './pages/Reparto'
 
 function Shell() {
   const { cargando, usuario, perfil, rol, esStaff, esAdmin, salir } = useAuth()
@@ -29,7 +30,7 @@ function Shell() {
 
   const lateral = [
     ['/', 'Inicio', Home], ['/vender', 'Vender', Plus], ['/ventas', 'Ventas y fiados', ReceiptText], ['/clientes', 'Clientes', Users],
-    ['/inventario', 'Inventario', Package], ['/eventos', 'Eventos', CalendarDays],
+    ['/inventario', 'Inventario', Package], ['/reparto', esStaff ? 'Reparto' : 'Mi inventario', Boxes], ['/eventos', 'Eventos', CalendarDays],
     ...(esStaff ? [['/compras', 'Proveedores y compras', Truck], ['/finanzas', 'Finanzas', Wallet], ['/metas', 'Metas', Target]] : []),
     ...(esAdmin ? [['/usuarios', 'Usuarios', ShieldCheck]] : []),
     ['/cuenta', 'Mi cuenta', KeyRound],
@@ -74,6 +75,7 @@ function Shell() {
           <Route path="/metas" element={soloStaff(<Metas />)} />
           <Route path="/usuarios" element={esAdmin ? <Usuarios /> : <Navigate to="/" replace />} />
           <Route path="/cuenta" element={<Cuenta />} />
+          <Route path="/reparto" element={<Reparto />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

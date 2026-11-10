@@ -58,6 +58,14 @@ En el celular: abrí la app en el navegador → "Agregar a pantalla de inicio" y
 - **Ajustar stock**: consumo propio, merma, donación o conteo físico (no mueve plata, pero sí cuenta como costo).
 - **Eventos**: cada venta, gasto y consumo puede ir a un evento; la ficha del evento muestra su ganancia o pérdida.
 
+## Reparto de inventario por persona
+`supabase/reparto.sql` (se corre después de `schema.sql`) agrega:
+- **Bodega** = stock total − lo que está en manos de alguien.
+- **Entregar**: Admin → Managers y Vendedores; Manager → Vendedores (de bodega o de lo suyo).
+- **Vender**: descuenta primero de lo que tiene asignado quien vende. Un Vendedor solo vende lo asignado; Admin/Manager pueden vender de bodega.
+- **Devolver/recoger**: vuelve a bodega. Anular una venta devuelve las unidades a la mano de quien vendió.
+- Pantalla **Reparto** (Mi inventario para vendedores): qué tiene cada persona, cuánto recibió, devolvió y vendió.
+
 ## Modo demo
 Sin `.env.local` la app arranca en modo demo con datos de ejemplo guardados solo en el navegador.
 `npm run build:demo` genera un solo HTML con la demo en `dist-demo/`.

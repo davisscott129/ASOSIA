@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, ChevronRight, KeyRound } from 'lucide-react'
+import { Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, ChevronRight, KeyRound, Boxes } from 'lucide-react'
 import { useAuth } from '../auth'
 import { Pagina } from '../ui'
 import { ROLES } from '../lib/format'
@@ -8,6 +8,7 @@ export default function Mas() {
   const { esStaff, esAdmin, perfil, salir } = useAuth()
   const items = [
     ['/inventario', Package, 'Inventario', esStaff ? 'Productos, precios, stock y ajustes' : 'Productos y stock disponible'],
+    ['/reparto', Boxes, esStaff ? 'Reparto de inventario' : 'Mi inventario', esStaff ? 'Qué tiene cada persona y cuánto ha vendido' : 'Lo que tenés asignado y lo que has vendido'],
     ['/eventos', CalendarDays, 'Eventos', 'Ventas, gastos y resultado de cada actividad'],
     esStaff && ['/compras', Truck, 'Proveedores y compras', 'Mercadería que entra y lo que se debe'],
     esStaff && ['/finanzas', Wallet, 'Finanzas', 'Caja, banco, gastos y resumen del mes'],

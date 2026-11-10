@@ -6,11 +6,19 @@ import { colones, nombreProducto } from '../lib/format'
 
 export default function Vender() {
   const carga = useCarga(async () => {
-    const [productos, clientes, eventos] = await Promise.all([
+    const [productos, clientes, eventos, disponible] = await Promise.all([
       api.list('productos', { filtros: [['eq', 'activo', true]], orden: ['nombre'] }),
       api.list('clientes', { orden: ['nombre'] }),
       api.list('eventos', { filtros: [['neq', 'estado', 'cerrado']], orden: ['fecha'] }),
+      api.rpc('mi_disponible'),
     ])
+    // Lo que cada quien puede vender: lo suyo + la bodega (solo admin/manager)
+    const disp = new Map((disponible || []).map((d) => [d.producto_id, d]))
+    productos.forEach((p) => {
+      const d = disp.get(p.id)
+      p.mio = d ? Number(d.mio) : 0
+      p.vendible = p.es_servicio ? Infinity : d ? Number(d.mio) + Number(d.bodega) : 0
+    })
     return { productos, clientes, eventos }
   })
   return (
@@ -42,7 +50,7 @@ function Caja({ d, recargar }) {
 
   const agregar = (p, n = 1) => setCarrito((c) => {
     const nueva = Math.max((c[p.id] || 0) + n, 0)
-    if (!p.es_servicio && nueva > p.stock) return c
+    if (!p.es_servicio && nueva > p.vendible) return c
     const x = { ...c, [p.id]: nueva }
     if (!nueva) delete x[p.id]
     return x
@@ -70,7 +78,7 @@ function Caja({ d, recargar }) {
       <div className="productos">
         {visibles.map((p) => {
           const enCarrito = carrito[p.id] || 0
-          const agotado = !p.es_servicio && p.stock - enCarrito <= 0
+          const agotado = !p.es_servicio && p.vendible - enCarrito <= 0
           return (
             <button key={p.id} className={`prod ${enCarrito ? 'prod-sel' : ''}`} disabled={agotado && !enCarrito} onClick={() => agregar(p)}>
               {enCarrito > 0 && <span className="prod-cant num">{enCarrito}</span>}
@@ -78,8 +86,8 @@ function Caja({ d, recargar }) {
               {p.variante && <span className="prod-var">{p.variante}</span>}
               <span className="prod-pie">
                 <span className="num">{colones(p.precio)}</span>
-                <span className={`prod-stock ${!p.es_servicio && p.stock <= p.stock_minimo ? 'bajo' : ''}`}>
-                  {p.es_servicio ? 'servicio' : p.stock <= 0 ? 'agotado' : `${p.stock - enCarrito} u`}
+                <span className={`prod-stock ${!p.es_servicio && p.vendible <= p.stock_minimo ? 'bajo' : ''}`}>
+                  {p.es_servicio ? 'servicio' : p.vendible <= 0 ? (p.stock > 0 ? 'sin asignar' : 'agotado') : p.mio > 0 ? `${Math.max(Math.min(p.mio, p.vendible) - enCarrito, 0)} tuyos` : `${p.vendible - enCarrito} u`}
                 </span>
               </span>
             </button>

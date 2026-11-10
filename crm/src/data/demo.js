@@ -55,6 +55,13 @@ const yo = () => quien()?.email
 
 // ---------------- Operaciones (mismas reglas que el SQL) ----------------
 const RPC = {
+  mi_disponible() {
+    acceso()
+    return db.productos.filter((p) => p.activo && !p.es_servicio).map((p) => ({ producto_id: p.id, mio: 0, bodega: p.stock }))
+  },
+  inventario_personas() { acceso(); return [] },
+  equipo() { staff(); return [] },
+  distribuir() { throw new Error('El reparto por persona solo funciona en la app real.') },
   mi_perfil() {
     const u = quien()
     const a = u && db.autorizados.find((x) => x.email === u.email && x.activo)
@@ -211,6 +218,7 @@ function puedeLeer(tabla) {
   if (!rol) return false
   if (tabla === 'autorizados') return true
   if (LECTURA_STAFF.includes(tabla)) return rol !== 'vendedor'
+  if (!db[tabla]) return false
   return true
 }
 function puedeEscribir(tabla, op) {
@@ -251,7 +259,7 @@ export const backend = {
 
   async list(tabla, o = {}) {
     cargar(); await tick()
-    if (!puedeLeer(tabla)) return []
+    if (!puedeLeer(tabla) || !db[tabla]) return []
     let filas = db[tabla]
     if (tabla === 'autorizados' && rolActual() !== 'admin') filas = filas.filter((a) => a.email === yo())
     for (const [op, col, val] of o.filtros || []) filas = filas.filter((f) => COMP[op](f[col] ?? null, val))
