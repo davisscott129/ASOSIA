@@ -519,3 +519,13 @@ button.indicador { width: 100%; background: none; border: 0; border-top: 1px sol
 .banda-cola li button { border: 0; border-radius: 99px; padding: 6px 12px; font-weight: 800; background: #fff; color: var(--petroleo); cursor: pointer; min-height: 36px; }
 @media (min-width: 960px) { .banda-cola { grid-column: 1 / -1; } }
 .sub-lista { font-size: 13px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tenue); margin: 4px 4px -6px; }
+
+/* inventario: dónde está cada unidad */
+.ubic-lista { display: flex; flex-direction: column; background: var(--superficie); border-radius: 14px; }
+.ubic-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--linea); min-height: 48px; }
+.ubic-fila:first-child { border-top: 0; }
+.ubic-fila span { display: flex; flex-direction: column; min-width: 0; }
+.ubic-fila small { color: var(--tenue); font-size: 12.5px; }
+.ubic-fila.editable input { width: 96px; text-align: right; font-weight: 800; font-size: 17px; }
+.etq-celeste { background: #dcf0f5; color: #1f6b80; }
+.sub-hoja { font-size: 15px; font-weight: 900; margin: 4px 2px -6px; }
