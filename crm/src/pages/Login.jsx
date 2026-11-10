@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Fingerprint } from 'lucide-react'
 import { api, activarDemo } from '../data/api'
 import { useAuth } from '../auth'
 import { Boton, Campo, Marca } from '../ui'
@@ -23,15 +22,12 @@ export default function Login({ sinAcceso }) {
     setEstado({ cargando: true })
     try { await api.loginClave(email, clave) } catch (err) { setEstado({ error: err.message }) }
   }
-  const entrarPasskey = async () => {
-    setEstado({ cargandoPasskey: true })
-    try { await api.loginPasskey() } catch (err) { setEstado({ error: err.message }) }
-  }
   
   const verificar = async (e) => {
     e.preventDefault()
     setEstado({ enviado: true, cargando: true })
     try {
+      try { sessionStorage.setItem('asosia-crear-clave', '1') } catch { /* */ }
       await api.verificarCodigo(email, codigo)
     } catch (err) {
       setEstado({ enviado: true, error: err.message })
@@ -110,14 +106,7 @@ export default function Login({ sinAcceso }) {
         ) : (
           <>
             <h1>Entrar</h1>
-            {api.soportaPasskey && (
-              <>
-                <Boton variante="pri" onClick={entrarPasskey} disabled={estado?.cargandoPasskey}>
-                  <Fingerprint size={20} /> {estado?.cargandoPasskey ? 'Esperando…' : 'Entrar con Face ID o huella'}
-                </Boton>
-                <div className="separador"><span>o con tu contraseña</span></div>
-              </>
-            )}
+            <p className="tenue">En el celular, al tocar Contraseña te ofrece llenarla con Face ID o huella si la guardaste.</p>
             <form onSubmit={entrarClave} className="form">
               <Campo label="Correo">
                 <input type="email" name="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@gmail.com" autoComplete="username" />
@@ -125,7 +114,7 @@ export default function Login({ sinAcceso }) {
               <Campo label="Contraseña">
                 <input type="password" name="password" required value={clave} onChange={(e) => setClave(e.target.value)} autoComplete="current-password" />
               </Campo>
-              <Boton variante={api.soportaPasskey ? 'sec' : 'pri'} disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
+              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
             </form>
             {estado?.error && <p className="error-txt">{estado.error}</p>}
             <button className="enlace" onClick={() => { setConCodigo(true); setEstado(null) }}>¿Primera vez o se te olvidó la contraseña? Entrá con un código al correo</button>

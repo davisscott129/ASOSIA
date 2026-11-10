@@ -16,13 +16,16 @@ import Compras from './pages/Compras'
 import Finanzas from './pages/Finanzas'
 import Metas from './pages/Metas'
 import Usuarios from './pages/Usuarios'
-import Cuenta from './pages/Cuenta'
+import Cuenta, { CrearClave } from './pages/Cuenta'
 
 function Shell() {
   const { cargando, usuario, perfil, rol, esStaff, esAdmin, salir } = useAuth()
   if (cargando) return <div className="pantalla-centro"><Marca /></div>
   if (!usuario) return <Login />
   if (!perfil) return <Login sinAcceso />
+  let pideClave = false
+  try { pideClave = sessionStorage.getItem('asosia-crear-clave') === '1' } catch { /* */ }
+  if (api.modo !== 'demo' && (!usuario.meta?.clave_lista || pideClave)) return <CrearClave />
 
   const lateral = [
     ['/', 'Inicio', Home], ['/vender', 'Vender', Plus], ['/ventas', 'Ventas y fiados', ReceiptText], ['/clientes', 'Clientes', Users],

@@ -5,8 +5,7 @@ import { useCarga, Estado, Seccion, Lista, Fila, Dinero, Etiqueta, Marca } from 
 import { colones, inicioMes, inicioDia, nombreMes, isoDia, sumar, nombreProducto, fechaCorta, CANALES } from '../lib/format'
 
 export default function Inicio() {
-  const { esStaff, perfil, usuario } = useAuth()
-  const sinAcceso = api.modo !== 'demo' && !usuario?.meta?.clave_lista && !usuario?.meta?.passkey_lista
+  const { esStaff, perfil } = useAuth()
   const carga = useCarga(async () => {
     const desde = inicioMes().toISOString()
     const [ventas, productos, pendientes, eventos, saldos, metas] = await Promise.all([
@@ -22,12 +21,6 @@ export default function Inicio() {
 
   return (
     <Estado carga={carga}>
-      {sinAcceso && (
-        <Link to="/cuenta" className="aviso-cuenta">
-          <strong>Configurá cómo entrar</strong>
-          <span>Creá una contraseña o activá Face ID o huella para no depender del código por correo.</span>
-        </Link>
-      )}
       {carga.data && <Tablero d={carga.data} esStaff={esStaff} nombre={perfil.nombre} />}
     </Estado>
   )

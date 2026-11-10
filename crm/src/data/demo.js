@@ -245,11 +245,8 @@ export const backend = {
   onAuth(cb) { listeners.add(cb); return () => listeners.delete(cb) },
   async entrarComo(rol) { cargar(); ponerRol(rol); avisar() },
   async salir() { ponerRol(null); avisar() },
-  soportaPasskey: false,
   async loginClave() { throw new Error('En la demo se entra eligiendo un rol.') },
-  async loginPasskey() { throw new Error('En la demo se entra eligiendo un rol.') },
   async crearClave() { await tick() },
-  async activarPasskey() { throw new Error('Face ID o huella solo funcionan en la app real.') },
   reiniciar() { sembrar(); guardar() },
 
   async list(tabla, o = {}) {

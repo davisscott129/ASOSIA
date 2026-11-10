@@ -13,7 +13,7 @@ export default function Mas() {
     esStaff && ['/finanzas', Wallet, 'Finanzas', 'Caja, banco, gastos y resumen del mes'],
     esStaff && ['/metas', Target, 'Metas', 'Meta de ventas de cada mes'],
     esAdmin && ['/usuarios', ShieldCheck, 'Usuarios', 'Quién puede entrar y con qué rol'],
-    ['/cuenta', KeyRound, 'Mi cuenta', 'Contraseña y Face ID o huella'],
+    ['/cuenta', KeyRound, 'Mi cuenta', 'Cambiar contraseña'],
   ].filter(Boolean)
   return (
     <Pagina titulo="Más">
