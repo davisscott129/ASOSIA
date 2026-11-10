@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { HashRouter, NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { Home, ReceiptText, Plus, Users, LayoutGrid, Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, KeyRound, Boxes } from 'lucide-react'
 import { AuthProvider, useAuth } from './auth'
-import { AvisoProvider, Marca } from './ui'
+import { AvisoProvider, Marca, useAviso } from './ui'
+import { leerCola, subirCola, alCambiarCola, descartarDeCola, reintentarDeCola } from './lib/cola'
+import { colones } from './lib/format'
 import { api, activarDemo, puedeSalirDeDemo } from './data/api'
 import { ROLES } from './lib/format'
 import Login from './pages/Login'
@@ -18,6 +21,53 @@ import Metas from './pages/Metas'
 import Usuarios from './pages/Usuarios'
 import Cuenta, { CrearClave } from './pages/Cuenta'
 import Reparto from './pages/Reparto'
+
+// Aviso de ventas guardadas sin internet; las sube solas cuando vuelve la conexión
+function ColaVentas() {
+  const aviso = useAviso()
+  const [cola, setCola] = useState(leerCola)
+  const [abierta, setAbierta] = useState(false)
+  useEffect(() => {
+    const leer = () => setCola(leerCola())
+    const subir = async () => {
+      if (!leerCola().some((x) => !x.error)) return
+      const r = await subirCola(api)
+      if (r.subidas) aviso(r.subidas === 1 ? 'Se subió 1 venta guardada sin internet' : `Se subieron ${r.subidas} ventas guardadas sin internet`)
+      if (r.errores) aviso('Una venta guardada no se pudo subir. Revisala arriba.', 'error')
+    }
+    const quitar = alCambiarCola(leer)
+    window.addEventListener('online', subir)
+    const t = setInterval(subir, 30000)
+    subir()
+    return () => { quitar(); window.removeEventListener('online', subir); clearInterval(t) }
+  }, [aviso])
+  if (!cola.length) return null
+  const conError = cola.filter((x) => x.error)
+  return (
+    <div className={`banda-cola ${conError.length ? 'con-error' : ''}`}>
+      <button type="button" className="banda-cola-resumen" onClick={() => setAbierta((a) => !a)} aria-expanded={abierta}>
+        {conError.length
+          ? `${conError.length} ${conError.length === 1 ? 'venta no se pudo subir' : 'ventas no se pudieron subir'} · tocá para revisar`
+          : `${cola.length} ${cola.length === 1 ? 'venta guardada' : 'ventas guardadas'} sin internet · se suben solas`}
+      </button>
+      {abierta && (
+        <ul>
+          {cola.map((x) => (
+            <li key={x.id}>
+              <span><b className="num">{colones(x.resumen?.total)}</b> · {x.resumen?.productos}{x.error && <><br /><small>{x.error}</small></>}</span>
+              {x.error && (
+                <span className="en-linea">
+                  <button type="button" onClick={() => reintentarDeCola(x.id)}>Reintentar</button>
+                  <button type="button" onClick={() => descartarDeCola(x.id)}>Descartar</button>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function Shell() {
   const { cargando, usuario, perfil, rol, esStaff, esAdmin, salir } = useAuth()
@@ -46,6 +96,7 @@ function Shell() {
           {puedeSalirDeDemo && <button onClick={() => activarDemo(false)}>Salir de la demo</button>}
         </div>
       )}
+      {api.modo !== 'demo' && <ColaVentas />}
       <aside className="lateral">
         <div className="lateral-marca"><Marca claro /><small>CRM</small></div>
         <nav>
