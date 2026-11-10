@@ -10,7 +10,9 @@ const MENSAJES = [
   [/row-level security/i, 'Tu rol no tiene permiso para hacer esto.'],
   [/duplicate key.*autorizados/i, 'Ese correo ya tiene acceso.'],
   [/violates foreign key/i, 'No se puede borrar porque tiene registros asociados.'],
-  [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá una hora o entrá con Google.'],
+  [/expired|invalid/i, 'Ese código no sirve o ya venció. Pedí uno nuevo.'],
+  [/security purposes/i, 'Esperá un minuto antes de pedir otro correo.'],
+  [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá un rato e intentá de nuevo.'],
   [/Failed to fetch/i, 'Sin conexión. Revisá el internet e intentá de nuevo.'],
 ]
 function fallo(error) {
@@ -35,6 +37,10 @@ export const backend = {
       email: email.trim().toLowerCase(),
       options: { emailRedirectTo: window.location.origin + window.location.pathname },
     })
+    if (error) fallo(error)
+  },
+  async verificarCodigo(email, token) {
+    const { error } = await sb.auth.verifyOtp({ email: email.trim().toLowerCase(), token: token.trim(), type: 'email' })
     if (error) fallo(error)
   },
   async loginGoogle() {

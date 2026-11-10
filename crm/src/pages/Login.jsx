@@ -13,6 +13,18 @@ export default function Login({ sinAcceso }) {
   const { usuario, salir, error } = useAuth()
   const [email, setEmail] = useState('')
   const [estado, setEstado] = useState(null)
+  const [codigo, setCodigo] = useState('')
+  const conGoogle = import.meta.env.VITE_LOGIN_GOOGLE === '1'
+
+  const verificar = async (e) => {
+    e.preventDefault()
+    setEstado({ enviado: true, cargando: true })
+    try {
+      await api.verificarCodigo(email, codigo)
+    } catch (err) {
+      setEstado({ enviado: true, error: err.message })
+    }
+  }
 
   const enviar = async (e) => {
     e.preventDefault()
@@ -59,21 +71,34 @@ export default function Login({ sinAcceso }) {
         ) : estado?.enviado ? (
           <>
             <h1>Revisá tu correo</h1>
-            <p className="tenue">Te enviamos un enlace a <strong>{email}</strong>. Abrilo en este mismo navegador para entrar.</p>
-            <button className="enlace" onClick={() => setEstado(null)}>Usar otro correo</button>
+            <p className="tenue">Te enviamos un correo a <strong>{email}</strong>. Escribí el código que trae, o abrí el enlace en este mismo navegador.</p>
+            <form onSubmit={verificar} className="form">
+              <Campo label="Código del correo">
+                <input inputMode="numeric" autoComplete="one-time-code" required minLength={6} maxLength={10} value={codigo}
+                  onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} placeholder="123456" autoFocus />
+              </Campo>
+              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
+            </form>
+            {estado?.error && <p className="error-txt">{estado.error}</p>}
+            <button className="enlace" onClick={() => { setEstado(null); setCodigo('') }}>Usar otro correo</button>
           </>
         ) : (
           <>
             <h1>Entrar</h1>
-            <Boton variante="google" onClick={() => api.loginGoogle().catch((e) => setEstado({ error: e.message }))}>
-              Continuar con Google
-            </Boton>
-            <div className="separador"><span>o con un enlace al correo</span></div>
+            {conGoogle && (
+              <>
+                <Boton variante="google" onClick={() => api.loginGoogle().catch((e) => setEstado({ error: e.message }))}>
+                  Continuar con Google
+                </Boton>
+                <div className="separador"><span>o con tu correo</span></div>
+              </>
+            )}
+            <p className="tenue">Te mandamos un código a tu correo para entrar, sin contraseña.</p>
             <form onSubmit={enviar} className="form">
               <Campo label="Correo">
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@gmail.com" autoComplete="email" />
               </Campo>
-              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Enviando…' : 'Enviarme el enlace'}</Boton>
+              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Enviando…' : 'Enviarme el código'}</Boton>
             </form>
             {estado?.error && <p className="error-txt">{estado.error}</p>}
             <button className="enlace" onClick={() => activarDemo(true)}>Ver la demo con datos de ejemplo</button>
