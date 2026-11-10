@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { api } from '../data/api'
-import { useCarga, useAccion, Estado, Pagina, Segmento, Chips, Hoja, Campo, Boton, Cuenta, DatosSinpe, num } from '../ui'
+import { useCarga, useAccion, Estado, Segmento, Chips, Hoja, Campo, Boton, Cuenta, DatosSinpe, num, Isotipo, PuntoCat } from '../ui'
 import { colones, nombreProducto } from '../lib/format'
 
 export default function Vender() {
@@ -22,9 +22,22 @@ export default function Vender() {
     return { productos, clientes, eventos }
   })
   return (
-    <Pagina titulo="Nueva venta">
+    <div className="pagina">
+      {!carga.data && <CabVender />}
       <Estado carga={carga}>{carga.data && <Caja d={carga.data} recargar={carga.recargar} />}</Estado>
-    </Pagina>
+    </div>
+  )
+}
+
+function CabVender({ children }) {
+  return (
+    <header className="cab-oscura">
+      <div className="cab-oscura-fila">
+        <h1>Nueva venta</h1>
+        <Isotipo size={44} />
+      </div>
+      {children}
+    </header>
   )
 }
 
@@ -58,7 +71,9 @@ function Caja({ d, recargar }) {
 
   return (
     <>
-      <Segmento className="canal" opciones={[['asodita', 'ASOdita'], ['general', 'General'], ['evento', 'Evento']]} valor={canal} onChange={(c) => { setCanal(c); setCat('todo') }} />
+      <CabVender>
+        <Segmento className="oscuro" opciones={[['asodita', 'ASOdita'], ['general', 'General'], ['evento', 'Evento']]} valor={canal} onChange={(c) => { setCanal(c); setCat('todo') }} />
+      </CabVender>
       {canal === 'evento' && (
         d.eventos.length ? (
           <Campo label="Evento">
@@ -73,28 +88,36 @@ function Caja({ d, recargar }) {
         <Search size={18} />
         <input value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Buscar producto" aria-label="Buscar producto" />
       </div>
-      <Chips opciones={[['todo', 'Todo'], ...categorias.map((c) => [c, c])]} valor={cat} onChange={setCat} />
+      <Chips opciones={[['todo', 'Todo'], ...categorias.map((c) => [c, <><PuntoCat cat={c} />{c}</>])]} valor={cat} onChange={setCat} />
 
-      <div className="productos">
-        {visibles.map((p) => {
-          const enCarrito = carrito[p.id] || 0
-          const agotado = !p.es_servicio && p.vendible - enCarrito <= 0
-          return (
-            <button key={p.id} className={`prod ${enCarrito ? 'prod-sel' : ''}`} disabled={agotado && !enCarrito} onClick={() => agregar(p)}>
-              {enCarrito > 0 && <span className="prod-cant num">{enCarrito}</span>}
-              <span className="prod-nom">{p.nombre}</span>
-              {p.variante && <span className="prod-var">{p.variante}</span>}
-              <span className="prod-pie">
-                <span className="num">{colones(p.precio)}</span>
-                <span className={`prod-stock ${!p.es_servicio && p.vendible <= p.stock_minimo ? 'bajo' : ''}`}>
-                  {p.es_servicio ? 'servicio' : p.vendible <= 0 ? (p.stock > 0 ? 'sin asignar' : 'agotado') : p.mio > 0 ? `${Math.max(Math.min(p.mio, p.vendible) - enCarrito, 0)} tuyos` : `${p.vendible - enCarrito} u`}
-                </span>
-              </span>
-            </button>
-          )
-        })}
-        {!visibles.length && <p className="tenue pad">Ningún producto coincide.</p>}
-      </div>
+      {visibles.length ? (
+        <div className="prod-lista">
+          {visibles.map((p) => {
+            const enCarrito = carrito[p.id] || 0
+            const agotado = !p.es_servicio && p.vendible - enCarrito <= 0
+            const estado = p.es_servicio ? 'servicio' : p.vendible <= 0 ? (p.stock > 0 ? 'sin asignar' : 'agotado') : p.mio > 0 ? `${Math.max(Math.min(p.mio, p.vendible) - enCarrito, 0)} tuyos` : `${p.vendible - enCarrito} u`
+            return (
+              <div key={p.id} className={`prod-fila ${agotado && !enCarrito ? 'agotado' : ''}`}>
+                <PuntoCat cat={p.categoria} />
+                <div className="prod-info">
+                  <div><span className="prod-nom">{p.nombre}</span>{p.variante && <span className="prod-var"> · {p.variante}</span>}</div>
+                  <div className={`prod-stock ${!p.es_servicio && p.vendible <= p.stock_minimo ? 'bajo' : ''}`}>{estado}</div>
+                </div>
+                <span className="prod-precio num">{colones(p.precio)}</span>
+                <div className="prod-acc">
+                  {enCarrito > 0 && (
+                    <>
+                      <button type="button" className="btn-redondo suave" onClick={() => agregar(p, -1)} aria-label={`Quitar un ${p.nombre}`}><Minus size={18} /></button>
+                      <span className="cant num" aria-live="polite">{enCarrito}</span>
+                    </>
+                  )}
+                  <button type="button" className="btn-redondo" disabled={agotado} onClick={() => agregar(p)} aria-label={`Agregar ${nombreProducto(p)}`}><Plus size={20} strokeWidth={2.6} /></button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : <p className="tenue pad">Ningún producto coincide.</p>}
 
       {unidades > 0 && (
         <div className="carrito-barra">
