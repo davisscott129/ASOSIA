@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Fingerprint } from 'lucide-react'
 import { api, activarDemo } from '../data/api'
 import { useAuth } from '../auth'
 import { Boton, Campo, Marca } from '../ui'
@@ -14,8 +15,19 @@ export default function Login({ sinAcceso }) {
   const [email, setEmail] = useState('')
   const [estado, setEstado] = useState(() => (api.avisoInicio ? { error: api.avisoInicio } : null))
   const [codigo, setCodigo] = useState('')
-  const conGoogle = import.meta.env.VITE_LOGIN_GOOGLE === '1'
+  const [clave, setClave] = useState('')
+  const [conCodigo, setConCodigo] = useState(false)
 
+  const entrarClave = async (e) => {
+    e.preventDefault()
+    setEstado({ cargando: true })
+    try { await api.loginClave(email, clave) } catch (err) { setEstado({ error: err.message }) }
+  }
+  const entrarPasskey = async () => {
+    setEstado({ cargandoPasskey: true })
+    try { await api.loginPasskey() } catch (err) { setEstado({ error: err.message }) }
+  }
+  
   const verificar = async (e) => {
     e.preventDefault()
     setEstado({ enviado: true, cargando: true })
@@ -80,20 +92,12 @@ export default function Login({ sinAcceso }) {
               <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
             </form>
             {estado?.error && <p className="error-txt">{estado.error}</p>}
-            <button className="enlace" onClick={() => { setEstado(null); setCodigo('') }}>Usar otro correo</button>
+            <button className="enlace" onClick={() => { setEstado(null); setCodigo('') }}>Pedir otro código</button>
           </>
-        ) : (
+        ) : conCodigo ? (
           <>
-            <h1>Entrar</h1>
-            {conGoogle && (
-              <>
-                <Boton variante="google" onClick={() => api.loginGoogle().catch((e) => setEstado({ error: e.message }))}>
-                  Continuar con Google
-                </Boton>
-                <div className="separador"><span>o con tu correo</span></div>
-              </>
-            )}
-            <p className="tenue">Te mandamos un código a tu correo para entrar, sin contraseña.</p>
+            <h1>Entrar con un código</h1>
+            <p className="tenue">Para la primera vez o si se te olvidó la contraseña. Te mandamos un código de 6 dígitos al correo.</p>
             <form onSubmit={enviar} className="form">
               <Campo label="Correo">
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@gmail.com" autoComplete="email" />
@@ -101,7 +105,31 @@ export default function Login({ sinAcceso }) {
               <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Enviando…' : 'Enviarme el código'}</Boton>
             </form>
             {estado?.error && <p className="error-txt">{estado.error}</p>}
-            <button className="enlace" onClick={() => activarDemo(true)}>Ver la demo con datos de ejemplo</button>
+            <button className="enlace" onClick={() => { setConCodigo(false); setEstado(null) }}>Volver a entrar con contraseña</button>
+          </>
+        ) : (
+          <>
+            <h1>Entrar</h1>
+            {api.soportaPasskey && (
+              <>
+                <Boton variante="pri" onClick={entrarPasskey} disabled={estado?.cargandoPasskey}>
+                  <Fingerprint size={20} /> {estado?.cargandoPasskey ? 'Esperando…' : 'Entrar con Face ID o huella'}
+                </Boton>
+                <div className="separador"><span>o con tu contraseña</span></div>
+              </>
+            )}
+            <form onSubmit={entrarClave} className="form">
+              <Campo label="Correo">
+                <input type="email" name="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nombre@gmail.com" autoComplete="username" />
+              </Campo>
+              <Campo label="Contraseña">
+                <input type="password" name="password" required value={clave} onChange={(e) => setClave(e.target.value)} autoComplete="current-password" />
+              </Campo>
+              <Boton variante={api.soportaPasskey ? 'sec' : 'pri'} disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
+            </form>
+            {estado?.error && <p className="error-txt">{estado.error}</p>}
+            <button className="enlace" onClick={() => { setConCodigo(true); setEstado(null) }}>¿Primera vez o se te olvidó la contraseña? Entrá con un código al correo</button>
+            <button className="enlace tenue" onClick={() => activarDemo(true)}>Ver la demo con datos de ejemplo</button>
           </>
         )}
       </div>

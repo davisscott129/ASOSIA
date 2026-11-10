@@ -10,6 +10,13 @@ const MENSAJES = [
   [/row-level security/i, 'Tu rol no tiene permiso para hacer esto.'],
   [/duplicate key.*autorizados/i, 'Ese correo ya tiene acceso.'],
   [/violates foreign key/i, 'No se puede borrar porque tiene registros asociados.'],
+  [/invalid login credentials/i, 'Correo o contraseña incorrectos. Si es tu primera vez, entrá con un código al correo.'],
+  [/email not confirmed/i, 'Ese correo todavía no está confirmado. Entrá con un código al correo.'],
+  [/should be at least|weak.?password/i, 'La contraseña debe tener al menos 8 caracteres.'],
+  [/different from the old/i, 'Esa ya es tu contraseña actual.'],
+  [/NotAllowed|aborted|cancel/i, 'Se canceló el Face ID o la huella. Intentá de nuevo.'],
+  [/passkey.*(not found|no credential)|credential.*not found/i, 'Este dispositivo no tiene Face ID o huella activado para la app. Entrá con tu contraseña y activalo en Mi cuenta.'],
+  [/passkey.*(disabled|not enabled)|webauthn.*(disabled|not enabled)/i, 'El ingreso con Face ID o huella todavía no está activado en el servidor.'],
   [/expired|invalid/i, 'Ese código no sirve o ya venció. Pedí uno nuevo.'],
   [/security purposes/i, 'Esperá un minuto antes de pedir otro correo.'],
   [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá un rato e intentá de nuevo.'],
@@ -29,6 +36,8 @@ const verificacionEnlace = (() => {
     .catch(() => { avisoInicio = 'No se pudo usar el enlace. Pedí un código nuevo.' })
 })()
 
+const aUsuario = (u) => (u ? { email: u.email, meta: u.user_metadata || {} } : null)
+
 function fallo(error) {
   const m = error?.message || String(error)
   const t = MENSAJES.find(([r]) => r.test(m))
@@ -42,11 +51,29 @@ export const backend = {
   async usuario() {
     await verificacionEnlace
     const { data } = await sb.auth.getSession()
-    return data.session?.user ? { email: data.session.user.email } : null
+    return aUsuario(data.session?.user)
   },
   onAuth(cb) {
-    const { data } = sb.auth.onAuthStateChange((_e, s) => cb(s?.user ? { email: s.user.email } : null))
+    const { data } = sb.auth.onAuthStateChange((_e, s) => cb(aUsuario(s?.user)))
     return () => data.subscription.unsubscribe()
+  },
+  soportaPasskey: typeof window !== 'undefined' && typeof window.PublicKeyCredential !== 'undefined',
+  async loginClave(email, password) {
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+    if (error) fallo(error)
+  },
+  async loginPasskey() {
+    const { error } = await sb.auth.signInWithPasskey()
+    if (error) fallo(error)
+  },
+  async crearClave(password) {
+    const { error } = await sb.auth.updateUser({ password, data: { clave_lista: true } })
+    if (error) fallo(error)
+  },
+  async activarPasskey() {
+    const { error } = await sb.auth.registerPasskey()
+    if (error) fallo(error)
+    await sb.auth.updateUser({ data: { passkey_lista: true } })
   },
   async loginCorreo(email) {
     const { error } = await sb.auth.signInWithOtp({

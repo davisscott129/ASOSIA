@@ -311,6 +311,9 @@ textarea { resize: vertical; }
 .bloque h3 { font-size: 17px; }
 .bloque p { margin: 0; }
 .bloque-peligro { background: #fbefed; border-color: #efc9c4; }
+.aviso-cuenta { display: flex; flex-direction: column; gap: 2px; margin-top: 14px; padding: 12px 14px; border-radius: var(--radio); background: var(--amarillo); color: var(--petroleo); }
+.aviso-cuenta span { font-size: 14px; }
+.con-icono { display: flex; align-items: center; gap: 8px; }
 .nota { margin: 0; padding: 10px 12px; background: #f4f8f9; border-radius: var(--radio-sm); font-size: 14px; }
 .error-txt { color: var(--rojo); margin: 0; }
 

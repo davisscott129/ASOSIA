@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, ChevronRight } from 'lucide-react'
+import { Package, CalendarDays, Truck, Wallet, Target, ShieldCheck, LogOut, ChevronRight, KeyRound } from 'lucide-react'
 import { useAuth } from '../auth'
 import { Pagina } from '../ui'
 import { ROLES } from '../lib/format'
@@ -13,6 +13,7 @@ export default function Mas() {
     esStaff && ['/finanzas', Wallet, 'Finanzas', 'Caja, banco, gastos y resumen del mes'],
     esStaff && ['/metas', Target, 'Metas', 'Meta de ventas de cada mes'],
     esAdmin && ['/usuarios', ShieldCheck, 'Usuarios', 'Quién puede entrar y con qué rol'],
+    ['/cuenta', KeyRound, 'Mi cuenta', 'Contraseña y Face ID o huella'],
   ].filter(Boolean)
   return (
     <Pagina titulo="Más">
