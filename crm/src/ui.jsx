@@ -237,3 +237,30 @@ export function DatosSinpe({ monto }) {
     </div>
   )
 }
+
+// Isotipo: los tres círculos (llave, pincel, casco). Versión simplificada en SVG.
+export function Isotipo({ size = 44, fondo = '#ffffff' }) {
+  return (
+    <svg width={size} height={Math.round(size * 0.92)} viewBox="0 0 100 92" aria-hidden="true">
+      <circle cx="50" cy="22" r="20" fill={fondo} /><circle cx="27" cy="68" r="20" fill={fondo} /><circle cx="73" cy="68" r="20" fill={fondo} />
+      <g transform="translate(50 24) rotate(-40)" fill="#5aadc4"><circle cx="0" cy="-7" r="6.5" /><rect x="-2.6" y="-6" width="5.2" height="18" rx="2.6" /><rect x="-2" y="-15" width="4" height="7" fill={fondo} /></g>
+      <g fill="#b6362b"><g transform="translate(29 66) rotate(40)"><rect x="-2" y="-14" width="4" height="14" rx="2" /><path d="M-4.5 0h9l-1.2 7a3.3 3.3 0 0 1-6.6 0z" /></g><circle cx="19" cy="76" r="3.2" /><circle cx="24" cy="80" r="2" /></g>
+      <g fill="#f3963f"><path d="M62 72a11 11 0 0 1 22 0z" /><rect x="59" y="72" width="28" height="4.5" rx="2.2" /><rect x="71" y="58" width="4" height="10" rx="1.5" fill={fondo} /></g>
+    </svg>
+  )
+}
+
+// Color fijo por categoría de producto (las desconocidas rotan por la paleta)
+const COLOR_CAT = { bebidas: '#5aadc4', comida: '#f3963f', snacks: '#f5eea3', mercaderia: '#b6362b', servicios: '#183e4e' }
+const PALETA = ['#5aadc4', '#f3963f', '#b6362b', '#183e4e', '#f5eea3']
+export function colorCategoria(cat = '') {
+  const k = cat.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (COLOR_CAT[k]) return COLOR_CAT[k]
+  let h = 0
+  for (const ch of k) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return PALETA[h % PALETA.length]
+}
+export function PuntoCat({ cat }) {
+  const c = colorCategoria(cat)
+  return <span className={`punto-cat ${c === '#f5eea3' ? 'claro' : ''}`} style={{ background: c }} aria-hidden="true" />
+}
