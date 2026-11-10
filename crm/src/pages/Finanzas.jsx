@@ -54,8 +54,9 @@ function Resumen({ mes }) {
         const gastos = sumar(d.gastos, 'monto')
         const perdidas = sumar(d.ajustes.filter((a) => a.cantidad < 0), (a) => -a.cantidad * a.costo)
         const resultado = vendido - costo - gastos - perdidas
-        const entro = sumar(d.movs.filter((m) => ['venta', 'cobro'].includes(m.tipo)), 'monto')
-        const salio = -sumar(d.movs.filter((m) => ['compra', 'gasto'].includes(m.tipo)), 'monto')
+        // Neto: las anulaciones restan de lo que entró (ventas) o salió (gastos)
+        const entro = sumar(d.movs.filter((m) => m.venta_id != null), 'monto')
+        const salio = -sumar(d.movs.filter((m) => m.compra_id != null || m.gasto_id != null), 'monto')
         const barra = (v) => <i style={{ width: `${activos ? Math.max((v / activos) * 100, 0) : 0}%` }} />
         return (
           <>
