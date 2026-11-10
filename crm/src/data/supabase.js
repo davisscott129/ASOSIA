@@ -6,6 +6,8 @@ export const configurado = Boolean(url && key)
 // pkce: el login vuelve con ?code= y no choca con las rutas #/ de la app
 const sb = configurado ? createClient(url, key, { auth: { flowType: 'pkce' } }) : null
 
+export const SIN_ACCESO = 'Ese correo no tiene acceso al CRM. Pedile a un admin de la asociación que te agregue en Usuarios.'
+
 const MENSAJES = [
   [/row-level security/i, 'Tu rol no tiene permiso para hacer esto.'],
   [/duplicate key.*autorizados/i, 'Ese correo ya tiene acceso.'],
@@ -18,6 +20,7 @@ const MENSAJES = [
   [/security purposes/i, 'Esperá un minuto antes de pedir otro correo.'],
   [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá un rato e intentá de nuevo.'],
   [/Failed to fetch/i, 'Sin conexión. Revisá el internet e intentá de nuevo.'],
+  [/correo no autorizado|database error saving new user|signups not allowed/i, SIN_ACCESO],
 ]
 // Enlace del correo con token_hash: funciona desde cualquier navegador o celular
 // (la plantilla del correo apunta a {{ .SiteURL }}/?token_hash=...&type=email)
@@ -33,6 +36,25 @@ const verificacionEnlace = (() => {
     .then(({ error }) => { if (error) avisoInicio = 'Ese enlace ya se usó o venció. Pedí un código nuevo.' })
     .catch(() => { avisoInicio = 'No se pudo usar el enlace. Pedí un código nuevo.' })
 })()
+
+// Pregunta a la base si el correo está en la lista de autorizados (activo)
+async function exigirAutorizado(email) {
+  const { data, error } = await sb.rpc('correo_autorizado', { p_email: email })
+  if (error) {
+    // Si la función todavía no existe en la base, no bloquear (el bloqueo de la base sigue activo)
+    if (/could not find the function|does not exist/i.test(error.message)) return
+    fallo(error)
+  }
+  if (data === false) throw new Error(SIN_ACCESO)
+}
+// Si la sesión quedó abierta para un correo sin acceso, cerrarla
+async function cerrarSiNoAutorizado() {
+  const { data } = await sb.rpc('mi_perfil')
+  if (!data) {
+    await sb.auth.signOut()
+    throw new Error(SIN_ACCESO)
+  }
+}
 
 const aUsuario = (u) => (u ? { email: u.email, meta: u.user_metadata || {} } : null)
 
@@ -56,8 +78,11 @@ export const backend = {
     return () => data.subscription.unsubscribe()
   },
   async loginClave(email, password) {
-    const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+    const correo = email.trim().toLowerCase()
+    await exigirAutorizado(correo)
+    const { error } = await sb.auth.signInWithPassword({ email: correo, password })
     if (error) fallo(error)
+    await cerrarSiNoAutorizado()
   },
   async crearClave(password) {
     const { error } = await sb.auth.updateUser({ password, data: { clave_lista: true } })
@@ -65,8 +90,10 @@ export const backend = {
     try { sessionStorage.removeItem('asosia-crear-clave') } catch { /* */ }
   },
   async loginCorreo(email) {
+    const correo = email.trim().toLowerCase()
+    await exigirAutorizado(correo)
     const { error } = await sb.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
+      email: correo,
       options: { emailRedirectTo: window.location.origin + window.location.pathname },
     })
     if (error) fallo(error)
@@ -74,6 +101,7 @@ export const backend = {
   async verificarCodigo(email, token) {
     const { error } = await sb.auth.verifyOtp({ email: email.trim().toLowerCase(), token: token.trim(), type: 'email' })
     if (error) fallo(error)
+    await cerrarSiNoAutorizado()
   },
   async loginGoogle() {
     const { error } = await sb.auth.signInWithOAuth({
