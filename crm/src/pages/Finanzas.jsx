@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Plus, Download, ArrowLeftRight, Scale } from 'lucide-react'
+import { Plus, Download, ArrowLeftRight, Scale, Coffee } from 'lucide-react'
 import { api } from '../data/api'
 import { useCarga, useAccion, Estado, Pagina, Segmento, Seccion, MesNav, Lista, Fila, Hoja, Campo, Boton, Cuenta, Chips, Etiqueta, Vacio, Dinero, num } from '../ui'
-import { colones, inicioMes, finMes, isoDia, fechaCorta, hora, sumar, nombreMes, CATEGORIAS_GASTO, descargarCSV } from '../lib/format'
+import { colones, inicioMes, finMes, isoDia, fechaCorta, hora, sumar, nombreMes, nombreProducto, CATEGORIAS_GASTO, descargarCSV } from '../lib/format'
 import { useNombres } from '../lib/nombres'
 
 export default function Finanzas() {
@@ -12,10 +12,11 @@ export default function Finanzas() {
   const [mes, setMes] = useState(inicioMes())
   return (
     <Pagina titulo="Finanzas" atras="/mas">
-      <Segmento opciones={[['resumen', 'Resumen'], ['gastos', 'Gastos'], ['caja', 'Caja']]} valor={tab} onChange={(t) => setParams(t === 'resumen' ? {} : { t })} />
+      <Segmento opciones={[['resumen', 'Resumen'], ['gastos', 'Gastos'], ['consumo', 'Consumo'], ['caja', 'Caja']]} valor={tab} onChange={(t) => setParams(t === 'resumen' ? {} : { t })} />
       <MesNav mes={mes} onChange={setMes} />
       {tab === 'resumen' && <Resumen mes={mes} />}
       {tab === 'gastos' && <Gastos mes={mes} />}
+      {tab === 'consumo' && <Consumo mes={mes} />}
       {tab === 'caja' && <Caja mes={mes} />}
     </Pagina>
   )
@@ -55,8 +56,10 @@ function Resumen({ mes }) {
         const vendido = sumar(d.ventas, 'total')
         const costo = sumar(d.ventas.flatMap((v) => v.venta_items), (i) => i.cantidad * i.costo)
         const gastos = sumar(d.gastos, 'monto')
-        const perdidas = sumar(d.ajustes.filter((a) => a.cantidad < 0), (a) => -a.cantidad * a.costo)
-        const resultado = vendido - costo - gastos - perdidas
+        const salidas = d.ajustes.filter((a) => a.cantidad < 0)
+        const consumoPropio = sumar(salidas.filter((a) => a.motivo === 'consumo'), (a) => -a.cantidad * a.costo)
+        const perdidas = sumar(salidas.filter((a) => a.motivo !== 'consumo'), (a) => -a.cantidad * a.costo)
+        const resultado = vendido - costo - gastos - consumoPropio - perdidas
         // Neto: las anulaciones restan de lo que entró (ventas) o salió (gastos)
         const entro = sumar(d.movs.filter((m) => m.venta_id != null), 'monto')
         const salio = -sumar(d.movs.filter((m) => m.compra_id != null || m.gasto_id != null), 'monto')
@@ -75,6 +78,7 @@ function Resumen({ mes }) {
               <div className="en-linea">
                 <Boton onClick={() => setHoja('traslado')}><ArrowLeftRight size={16} /> Traslado</Boton>
                 <Boton onClick={() => setHoja('cuadre')}><Scale size={16} /> Cuadrar caja</Boton>
+                <Boton onClick={() => setHoja('consumo')}><Coffee size={16} /> Consumo propio</Boton>
               </div>
             </div>
 
@@ -103,7 +107,8 @@ function Resumen({ mes }) {
                 <Fila titulo="Costo de lo vendido" derecha={'−' + colones(costo)} />
                 <Fila titulo="Ganancia bruta" sub={vendido ? `margen ${Math.round(((vendido - costo) / vendido) * 100)}%` : null} derecha={colones(vendido - costo)} />
                 <Fila titulo="Gastos" sub={`${d.gastos.length} gastos`} derecha={'−' + colones(gastos)} />
-                {perdidas > 0 && <Fila titulo="Merma y consumo propio" derecha={'−' + colones(perdidas)} />}
+                {consumoPropio > 0 && <Fila titulo="Consumo propio" sub="Producto usado por la asociación, al costo" derecha={'−' + colones(consumoPropio)} />}
+                {perdidas > 0 && <Fila titulo="Merma, donaciones y faltantes" derecha={'−' + colones(perdidas)} />}
                 <Fila titulo={<strong>{resultado >= 0 ? 'Ganancia del mes' : 'Pérdida del mes'}</strong>} derecha={<strong className={resultado >= 0 ? 'verde' : 'rojo'}>{colones(resultado)}</strong>} />
               </div>
               <div className="estado-cuenta">
@@ -116,6 +121,7 @@ function Resumen({ mes }) {
 
             {hoja === 'traslado' && <Traslado onCerrar={() => setHoja(null)} onListo={() => { setHoja(null); carga.recargar() }} />}
             {hoja === 'cuadre' && <Cuadre saldos={d.saldos} onCerrar={() => setHoja(null)} onListo={() => { setHoja(null); carga.recargar() }} />}
+            {hoja === 'consumo' && <NuevoConsumo onCerrar={() => setHoja(null)} onListo={() => { setHoja(null); carga.recargar() }} />}
           </>
         )
       })()}
@@ -167,6 +173,125 @@ function Cuadre({ saldos, onCerrar, onListo }) {
         <Campo label="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Cierre de caja del viernes" /></Campo>
         <Boton variante="pri" disabled={ocupado || dif === 0}>Guardar cuadre</Boton>
       </form>
+    </Hoja>
+  )
+}
+
+// ---------------- Consumo propio ----------------
+const MOTIVOS = { consumo: 'Consumo propio', merma: 'Merma', donacion: 'Donación', conteo: 'Conteo físico' }
+
+function Consumo({ mes }) {
+  const nombre = useNombres()
+  const [nuevo, setNuevo] = useState(false)
+  const [motivo, setMotivo] = useState('consumo')
+  const carga = useCarga(async () => {
+    const [ajustes, productos, eventos] = await Promise.all([
+      api.list('ajustes_stock', { filtros: [['gte', 'fecha', mes.toISOString()], ['lt', 'fecha', finMes(mes).toISOString()]], orden: ['fecha', false] }),
+      api.list('productos'),
+      api.list('eventos'),
+    ])
+    return { ajustes, productos: new Map(productos.map((p) => [p.id, p])), eventos: new Map(eventos.map((e) => [e.id, e])) }
+  }, [mes.getTime()])
+  const d = carga.data
+  const lista = (d?.ajustes || []).filter((a) => a.cantidad < 0 && (motivo === 'todos' || a.motivo === motivo))
+  const total = sumar(lista, (a) => -a.cantidad * a.costo)
+  const exportar = () => descargarCSV(`consumo-${isoDia(mes).slice(0, 7)}.csv`, lista.map((a) => ({
+    fecha: new Date(a.fecha).toLocaleString('es-CR'), motivo: MOTIVOS[a.motivo] || a.motivo,
+    producto: d.productos.get(a.producto_id) ? nombreProducto(d.productos.get(a.producto_id)) : '', unidades: -a.cantidad,
+    costo_unitario: a.costo, total: -a.cantidad * a.costo, evento: d.eventos.get(a.evento_id)?.nombre || '', nota: a.nota || '', registro: nombre(a.creado_por),
+  })))
+
+  return (
+    <>
+      <div className="en-linea fin">
+        {lista.length > 0 && <Boton onClick={exportar}><Download size={16} /> CSV</Boton>}
+        <Boton variante="pri" onClick={() => setNuevo(true)}><Plus size={18} /> Consumo</Boton>
+      </div>
+      <Chips opciones={[['consumo', 'Consumo propio'], ['merma', 'Merma'], ['donacion', 'Donaciones'], ['todos', 'Todo']]} valor={motivo} onChange={setMotivo} />
+      <Estado carga={carga}>
+        {d && (
+          <>
+            <div className="resumen-linea"><span>{sumar(lista, (a) => -a.cantidad)} unidades · al costo</span><strong className="num">{colones(total)}</strong></div>
+            {lista.length ? (
+              <Lista>
+                {lista.map((a) => {
+                  const p = d.productos.get(a.producto_id)
+                  return (
+                    <Fila key={a.id}
+                      titulo={<>{p ? nombreProducto(p) : 'Producto'} {motivo === 'todos' && <Etiqueta>{MOTIVOS[a.motivo] || a.motivo}</Etiqueta>}</>}
+                      sub={[`${fechaCorta(a.fecha)} ${hora(a.fecha)}`, a.nota, d.eventos.get(a.evento_id)?.nombre, a.creado_por && nombre(a.creado_por)].filter(Boolean).join(' · ')}
+                      derecha={colones(-a.cantidad * a.costo)} derechaSub={`${-a.cantidad} u × ${colones(a.costo)}`} />
+                  )
+                })}
+              </Lista>
+            ) : <Vacio>No hay {motivo === 'todos' ? 'salidas de inventario' : (MOTIVOS[motivo] || '').toLowerCase()} registrado en {nombreMes(mes)}.</Vacio>}
+            <p className="tenue pad">Se cuenta al costo del producto y se resta del resultado del mes. El stock baja de la bodega.</p>
+          </>
+        )}
+      </Estado>
+      {nuevo && <NuevoConsumo onCerrar={() => setNuevo(false)} onListo={() => { setNuevo(false); carga.recargar() }} />}
+    </>
+  )
+}
+
+function NuevoConsumo({ onCerrar, onListo }) {
+  const [correr, ocupado] = useAccion()
+  const [productoId, setProductoId] = useState('')
+  const [cantidad, setCantidad] = useState('')
+  const [motivo, setMotivo] = useState('consumo')
+  const [eventoId, setEventoId] = useState('')
+  const [nota, setNota] = useState('')
+  const carga = useCarga(async () => {
+    const [productos, existencias, eventos] = await Promise.all([
+      api.list('productos', { filtros: [['eq', 'activo', true], ['eq', 'es_servicio', false]], orden: ['nombre'] }),
+      api.list('existencias').catch(() => []),
+      api.list('eventos', { filtros: [['neq', 'estado', 'cerrado']], orden: ['fecha'] }),
+    ])
+    const manos = new Map()
+    ;(existencias || []).forEach((e) => manos.set(e.producto_id, (manos.get(e.producto_id) || 0) + Number(e.cantidad)))
+    productos.forEach((p) => { p.bodega = p.stock - (manos.get(p.id) || 0) })
+    return { productos, eventos }
+  })
+  const p = carga.data?.productos.find((x) => x.id === productoId)
+  const n = Number(cantidad) || 0
+  const pasa = p && n > p.bodega
+
+  const guardar = async (e) => {
+    e.preventDefault()
+    if (await correr(() => api.rpc('ajustar_stock', { p_producto: productoId, p_cantidad: -n, p_motivo: motivo, p_nota: nota || null, p_evento: eventoId || null }),
+      `${MOTIVOS[motivo]} registrado: ${n} × ${nombreProducto(p)}`)) onListo()
+  }
+
+  return (
+    <Hoja abierta titulo="Consumo propio" onCerrar={onCerrar}>
+      <Estado carga={carga}>
+        {carga.data && (
+          <form className="form" onSubmit={guardar}>
+            <p className="tenue">Para producto que usa la asociación sin venderlo: café para la junta, agua para jurados, premios… Baja el stock de la bodega y se cuenta al costo en Finanzas.</p>
+            <Campo label="Producto">
+              <select required value={productoId} onChange={(e) => setProductoId(e.target.value ? Number(e.target.value) : '')}>
+                <option value="">Elegí un producto</option>
+                {carga.data.productos.map((x) => <option key={x.id} value={x.id}>{nombreProducto(x)} · {x.bodega} en bodega</option>)}
+              </select>
+            </Campo>
+            <div className="dos-col">
+              <Campo label="Unidades" ayuda={p && n > 0 && !pasa ? `Al costo: ${colones(n * p.costo)}` : null}>
+                <input type="number" inputMode="numeric" required min="1" value={cantidad} onChange={(e) => setCantidad(num(e.target.value))} />
+              </Campo>
+              <Campo label="Evento (opcional)">
+                <select value={eventoId} onChange={(e) => setEventoId(e.target.value ? Number(e.target.value) : '')}>
+                  <option value="">Ninguno</option>
+                  {carga.data.eventos.map((ev) => <option key={ev.id} value={ev.id}>{ev.nombre}</option>)}
+                </select>
+              </Campo>
+            </div>
+            {pasa && <p className="aviso-linea">En bodega solo hay {p.bodega}. Si lo tiene un vendedor, primero devolvelo a bodega en Inventario.</p>}
+            <Campo label="Tipo" grupo><Segmento opciones={[['consumo', 'Consumo propio'], ['merma', 'Merma'], ['donacion', 'Donación']]} valor={motivo} onChange={setMotivo} /></Campo>
+            <Campo label="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej.: café para la reunión de junta" /></Campo>
+            <Boton variante="pri" disabled={ocupado || !productoId || n <= 0 || pasa}>Registrar</Boton>
+          </form>
+        )}
+      </Estado>
     </Hoja>
   )
 }
