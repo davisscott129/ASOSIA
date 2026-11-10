@@ -138,9 +138,13 @@ const RPC = {
     const c = nuevo('compras', { fecha: p.fecha || hoy(), proveedor_id: p.proveedor_id || null, evento_id: p.evento_id || null, total: 0, pagado: 0, estado: 'pagada', notas: p.notas || null, creado_por: yo(), creado_at: ahora() })
     let total = 0
     for (const it of items) {
-      const prod = porId('productos', it.producto_id)
+      const prod = it.nuevo
+        ? nuevo('productos', { nombre: it.nuevo.nombre, variante: it.nuevo.variante || null, categoria: it.nuevo.categoria || 'General', precio: Number(it.precio) || 0, costo: 0, stock: 0, stock_minimo: 0, es_servicio: false, en_asodita: true, visible_web: false, activo: true })
+        : porId('productos', it.producto_id)
       if (!prod) throw new Error('Un producto ya no existe')
-      const cant = Number(it.cantidad); const costo = Number(it.costo)
+      const cant = Number(it.cantidad)
+      const costo = it.costo_total != null ? r2(Number(it.costo_total) / cant) : Number(it.costo)
+      if (it.precio != null) prod.precio = Number(it.precio)
       nuevo('compra_items', { compra_id: c.id, producto_id: prod.id, nombre: prod.variante ? `${prod.nombre} · ${prod.variante}` : prod.nombre, cantidad: cant, costo })
       const base = Math.max(prod.stock, 0)
       prod.costo = base + cant > 0 ? r2((base * prod.costo + cant * costo) / (base + cant)) : costo

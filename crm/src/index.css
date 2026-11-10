@@ -326,6 +326,13 @@ textarea { resize: vertical; }
 .tr-prod { font-weight: 600; min-width: 0; }
 .tr-tiene { font-weight: 700; font-size: 17px; }
 .filtro-quien { min-height: 40px; font-weight: 600; }
+.linea-compra { border: 1px solid var(--linea); background: var(--superficie); border-radius: var(--radio); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.linea-compra-cab { display: flex; gap: 6px; align-items: center; }
+.linea-compra-cab select { flex: 1; font-weight: 600; }
+.linea-compra-info { margin: 0; font-size: 13.5px; color: var(--tenue); background: #f4f8f9; border-radius: var(--radio-sm); padding: 8px 10px; }
+.tres-col { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+@media (max-width: 480px) { .tres-col { grid-template-columns: 1fr 1fr; } .tres-col > :first-child { grid-column: 1 / -1; } }
+.enlace.en-texto { padding: 0; font-size: inherit; }
 .nota { margin: 0; padding: 10px 12px; background: #f4f8f9; border-radius: var(--radio-sm); font-size: 14px; }
 .error-txt { color: var(--rojo); margin: 0; }
 
