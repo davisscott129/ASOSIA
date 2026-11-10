@@ -11,12 +11,21 @@ export default function Compras() {
   const [viendo, setViendo] = useState(null)
   const [prov, setProv] = useState(null)
   const carga = useCarga(async () => {
-    const [compras, proveedores, productos, eventos] = await Promise.all([
+    const [compras, proveedores, productos, eventos, movs] = await Promise.all([
       api.list('compras', { select: '*, compra_items(*)', orden: ['fecha', false], limite: 200 }),
       api.list('proveedores', { orden: ['nombre'] }),
       api.list('productos', { filtros: [['eq', 'activo', true], ['eq', 'es_servicio', false]], orden: ['nombre'] }),
       api.list('eventos', { filtros: [['neq', 'estado', 'cerrado']] }),
+      api.list('movimientos', { filtros: [['eq', 'tipo', 'compra']], orden: ['fecha'] }).catch(() => []),
     ])
+    // Pagos de cada compra (efectivo o banco/SINPE)
+    const pagos = new Map()
+    for (const m of movs || []) {
+      if (!m.compra_id) continue
+      if (!pagos.has(m.compra_id)) pagos.set(m.compra_id, [])
+      pagos.get(m.compra_id).push(m)
+    }
+    compras.forEach((c) => { c.pagos = pagos.get(c.id) || [] })
     return { compras, proveedores, productos, eventos, provMap: new Map(proveedores.map((p) => [p.id, p])) }
   })
   const d = carga.data
@@ -37,7 +46,7 @@ export default function Compras() {
               <Lista>
                 {d.compras.map((c) => (
                   <Fila key={c.id} onClick={() => setViendo(c)}
-                    titulo={<>{d.provMap.get(c.proveedor_id)?.nombre || 'Sin proveedor'} {c.estado === 'pendiente' && <Etiqueta tono="rojo">Por pagar</Etiqueta>}</>}
+                    titulo={<>{d.provMap.get(c.proveedor_id)?.nombre || 'Sin proveedor'} {c.estado === 'pendiente' && <Etiqueta tono="rojo">Por pagar</Etiqueta>}{formaDePago(c.pagos) && <Etiqueta tono={c.pagos.some((m) => m.cuenta === 'banco') ? 'celeste' : 'ok'}>{formaDePago(c.pagos)}</Etiqueta>}</>}
                     sub={`#${c.id} · ${fechaCorta(c.fecha)} · ${c.compra_items.length} ${c.compra_items.length === 1 ? 'producto' : 'productos'}`}
                     derecha={colones(c.total)} derechaSub={c.estado === 'pendiente' ? `debe ${colones(c.total - c.pagado)}` : null} />
                 ))}
@@ -132,6 +141,14 @@ function NuevaCompra({ d, onCerrar, onListo }) {
   )
 }
 
+const NOMBRE_CUENTA = { efectivo: 'Efectivo', banco: 'SINPE / banco' }
+// "Efectivo", "SINPE / banco" o "Efectivo + SINPE / banco"
+function formaDePago(pagos) {
+  const cuentas = [...new Set((pagos || []).map((m) => m.cuenta))]
+  if (!cuentas.length) return null
+  return cuentas.length > 1 ? 'Efectivo + SINPE / banco' : NOMBRE_CUENTA[cuentas[0]] || cuentas[0]
+}
+
 const lineaVacia = () => ({ producto_id: '', nuevo: null, cantidad: '', total: '', margen: 50, precio: '', manual: false })
 const redondear50 = (n) => Math.ceil(n / 50) * 50
 const unitario = (it) => (Number(it.cantidad) > 0 && Number(it.total) > 0 ? Number(it.total) / Number(it.cantidad) : null)
@@ -213,6 +230,14 @@ function DetalleCompra({ compra, proveedor, onCerrar, onListo }) {
         <Fila titulo={<strong>Total</strong>} derecha={<strong>{colones(compra.total)}</strong>} derechaSub={`pagado ${colones(compra.pagado)}`} />
       </Lista>
       {compra.notas && <p className="nota">{compra.notas}</p>}
+      <h3 className="sub-hoja">Pagos</h3>
+      {compra.pagos?.length ? (
+        <Lista>
+          {compra.pagos.map((m) => (
+            <Fila key={m.id} titulo={NOMBRE_CUENTA[m.cuenta] || m.cuenta} sub={`${fechaCorta(m.fecha)}${m.creado_por ? ' · ' + nombre(m.creado_por) : ''}`} derecha={colones(-m.monto)} />
+          ))}
+        </Lista>
+      ) : <p className="tenue pad">Todavía no se ha pagado nada.</p>}
       {compra.estado === 'pendiente' && (
         <div className="bloque">
           <h3>Pagar · se debe {colones(saldo)}</h3>

@@ -5,6 +5,7 @@ import { api } from '../data/api'
 import { useAuth } from '../auth'
 import { useCarga, useAccion, Estado, Pagina, Chips, Lista, Fila, Hoja, Campo, Boton, Segmento, Vacio, num } from '../ui'
 import { colones, nombreProducto, sumar } from '../lib/format'
+import { useNombres } from '../lib/nombres'
 
 export default function Inventario() {
   const { esStaff } = useAuth()
@@ -13,14 +14,25 @@ export default function Inventario() {
   const [buscar, setBuscar] = useState('')
   const [editando, setEditando] = useState(null)
   const [ajustando, setAjustando] = useState(null)
+  const [ubicando, setUbicando] = useState(null)
   const carga = useCarga(async () => {
-    const [productos, existencias] = await Promise.all([
+    const [productos, existencias, equipo] = await Promise.all([
       api.list('productos', { orden: ['nombre'] }),
       esStaff ? api.list('existencias') : [],
+      esStaff ? api.rpc('equipo').catch(() => []) : [],
     ])
-    const rep = new Map()
-    ;(existencias || []).forEach((e) => rep.set(e.producto_id, (rep.get(e.producto_id) || 0) + Number(e.cantidad)))
-    productos.forEach((p) => { p.repartido = rep.get(p.id) || 0 })
+    const porProducto = new Map()
+    ;(existencias || []).forEach((e) => {
+      if (!(Number(e.cantidad) > 0)) return
+      if (!porProducto.has(e.producto_id)) porProducto.set(e.producto_id, [])
+      porProducto.get(e.producto_id).push({ email: e.email, cantidad: Number(e.cantidad) })
+    })
+    productos.forEach((p) => {
+      p.manos = porProducto.get(p.id) || []
+      p.repartido = sumar(p.manos, 'cantidad')
+      p.bodega = p.stock - p.repartido
+    })
+    productos.equipo = equipo || []
     return productos
   }, [esStaff])
 
@@ -58,7 +70,7 @@ export default function Inventario() {
                 titulo={nombreProducto(p)}
                 sub={`${p.categoria} · ${colones(p.precio)}${esStaff && !p.es_servicio ? ` · costo ${colones(p.costo)}` : ''}`}
                 derecha={p.es_servicio ? 'servicio' : `${p.stock} u`}
-                derechaSub={p.es_servicio ? null : [p.repartido > 0 ? `${p.stock - p.repartido} en bodega` : null, p.stock <= p.stock_minimo ? 'reponer' : null].filter(Boolean).join(' · ') || null}
+                derechaSub={p.es_servicio ? null : [esStaff ? `${p.bodega} en bodega` : null, p.repartido > 0 ? `${p.repartido} con vendedores` : null, p.stock <= p.stock_minimo ? 'reponer' : null].filter(Boolean).join(' · ') || null}
                 tono={!p.es_servicio && p.stock <= p.stock_minimo ? 'alerta' : null} />
             ))}
           </Lista>
@@ -66,14 +78,17 @@ export default function Inventario() {
       </Estado>
       {editando && (
         <EditarProducto producto={editando} categorias={[...new Set(todos.map((p) => p.categoria))]} onCerrar={() => setEditando(null)}
-          onAjustar={() => { setAjustando(editando); setEditando(null) }} onListo={() => { setEditando(null); carga.recargar() }} />
+          onAjustar={() => { setAjustando(editando); setEditando(null) }} onUbicar={() => { setUbicando(editando); setEditando(null) }}
+          onListo={() => { setEditando(null); carga.recargar() }} />
       )}
+      {ubicando && <Ubicacion producto={ubicando} equipo={todos.equipo || []} onCerrar={() => setUbicando(null)} onListo={() => { setUbicando(null); carga.recargar() }} />}
       {ajustando && <AjustarStock producto={ajustando} onCerrar={() => setAjustando(null)} onListo={() => { setAjustando(null); carga.recargar() }} />}
     </Pagina>
   )
 }
 
-function EditarProducto({ producto, categorias, onCerrar, onAjustar, onListo }) {
+function EditarProducto({ producto, categorias, onCerrar, onAjustar, onUbicar, onListo }) {
+  const nombre = useNombres()
   const [f, setF] = useState({ nombre: '', variante: '', categoria: '', precio: '', costo: '', stock: '', stock_minimo: '', es_servicio: false, en_asodita: true, visible_web: false, activo: true, ...producto })
   const [correr, ocupado] = useAccion()
   const set = (k, n) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : n ? num(e.target.value) : e.target.value })
@@ -108,9 +123,18 @@ function EditarProducto({ producto, categorias, onCerrar, onAjustar, onListo }) 
         {!f.es_servicio && (
           <div className="dos-col">
             {nuevo
-              ? <Campo label="Stock inicial"><input type="number" inputMode="numeric" value={f.stock} onChange={set('stock', 1)} /></Campo>
-              : <Campo label="Stock actual" grupo><div className="en-linea"><strong className="num grande">{producto.stock} u</strong><Boton type="button" onClick={onAjustar}>Ajustar</Boton></div></Campo>}
+              ? <Campo label="Cuántos hay en bodega"><input type="number" inputMode="numeric" value={f.stock} onChange={set('stock', 1)} /></Campo>
+              : <Campo label="Stock total" grupo><div className="en-linea"><strong className="num grande">{producto.stock} u</strong><Boton type="button" onClick={onAjustar}>Salida o merma</Boton></div></Campo>}
             <Campo label="Avisar cuando queden"><input type="number" inputMode="numeric" value={f.stock_minimo} onChange={set('stock_minimo', 1)} /></Campo>
+          </div>
+        )}
+        {!nuevo && !f.es_servicio && (
+          <div className="bloque">
+            <div className="en-linea fin"><h3>¿Dónde está?</h3><Boton type="button" variante="pri" onClick={onUbicar}>Cambiar cantidades</Boton></div>
+            <div className="ubic-lista">
+              <div className="ubic-fila"><span>Bodega</span><strong className="num">{producto.bodega} u</strong></div>
+              {producto.manos.map((m) => <div key={m.email} className="ubic-fila"><span>{nombre(m.email)}</span><strong className="num">{m.cantidad} u</strong></div>)}
+            </div>
           </div>
         )}
         <CalculoLote onCosto={(c) => setF({ ...f, costo: c })} />
@@ -167,6 +191,67 @@ function AjustarStock({ producto, onCerrar, onListo }) {
         </Campo>
         <Campo label="Nota"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej.: agua para jurados de la feria" /></Campo>
         <Boton variante="pri" disabled={ocupado || !delta}>Guardar ajuste</Boton>
+      </form>
+    </Hoja>
+  )
+}
+
+// Cuántos hay en bodega y cuántos tiene cada vendedor. Guarda las diferencias:
+// devoluciones a bodega → conteo de bodega → entregas a vendedores.
+function Ubicacion({ producto, equipo, onCerrar, onListo }) {
+  const nombre = useNombres()
+  const antes = new Map(producto.manos.map((m) => [m.email, m.cantidad]))
+  const personas = [...new Map([...equipo.map((e) => [e.email, e]), ...producto.manos.map((m) => [m.email, { email: m.email }])]).values()]
+  const editables = new Set(equipo.map((e) => e.email))
+  const [bodega, setBodega] = useState(String(producto.bodega))
+  const [manos, setManos] = useState(() => Object.fromEntries(personas.map((p) => [p.email, String(antes.get(p.email) || 0)])))
+  const [nota, setNota] = useState('')
+  const [correr, ocupado] = useAccion()
+
+  const val = (x) => Math.max(Number(x) || 0, 0)
+  const cambios = personas.map((p) => ({ email: p.email, dif: val(manos[p.email]) - (antes.get(p.email) || 0) })).filter((c) => c.dif !== 0)
+  const total = val(bodega) + sumar(personas, (p) => val(manos[p.email]))
+  const hayCambios = cambios.length > 0 || val(bodega) !== producto.bodega
+
+  const guardar = async (e) => {
+    e.preventDefault()
+    const ok = await correr(async () => {
+      const devoluciones = cambios.filter((c) => c.dif < 0)
+      const entregas = cambios.filter((c) => c.dif > 0)
+      for (const c of devoluciones) await api.rpc('distribuir', { p_producto: producto.id, p_cantidad: -c.dif, p_de: c.email, p_a: null, p_nota: nota || 'Desde Inventario' })
+      const bodegaAhora = producto.bodega - sumar(devoluciones, 'dif')
+      const necesaria = val(bodega) + sumar(entregas, 'dif')
+      const delta = necesaria - bodegaAhora
+      if (delta !== 0) await api.rpc('ajustar_stock', { p_producto: producto.id, p_cantidad: delta, p_motivo: 'conteo', p_nota: nota || 'Conteo de bodega' })
+      for (const c of entregas) await api.rpc('distribuir', { p_producto: producto.id, p_cantidad: c.dif, p_de: null, p_a: c.email, p_nota: nota || 'Desde Inventario' })
+    }, 'Cantidades guardadas')
+    if (ok) onListo()
+  }
+
+  return (
+    <Hoja abierta titulo={`¿Dónde está? · ${nombreProducto(producto)}`} onCerrar={onCerrar} pie={
+      <div className="pie-total">
+        <div><span className="tenue">Total</span><strong className="num">{total} u</strong></div>
+        <Boton variante="pri" form="f-ubic" disabled={ocupado || !hayCambios}>{ocupado ? 'Guardando…' : 'Guardar'}</Boton>
+      </div>
+    }>
+      <form id="f-ubic" className="form" onSubmit={guardar}>
+        <p className="tenue">Poné cuántas unidades hay en la bodega y cuántas tiene cada persona. Al guardar se anota como entrega, devolución o conteo.</p>
+        <div className="ubic-lista">
+          <label className="ubic-fila editable">
+            <span><strong>Bodega</strong><small>antes {producto.bodega} u</small></span>
+            <input type="number" inputMode="numeric" min="0" value={bodega} onChange={(e) => setBodega(e.target.value)} aria-label="Unidades en bodega" />
+          </label>
+          {personas.map((p) => (
+            <label key={p.email} className="ubic-fila editable">
+              <span><strong>{nombre(p.email)}</strong><small>{p.rol ? `${p.rol} · ` : ''}antes {antes.get(p.email) || 0} u</small></span>
+              <input type="number" inputMode="numeric" min="0" value={manos[p.email]} disabled={!editables.has(p.email)}
+                onChange={(e) => setManos({ ...manos, [p.email]: e.target.value })} aria-label={`Unidades que tiene ${nombre(p.email)}`} />
+            </label>
+          ))}
+        </div>
+        {!equipo.length && <p className="nota">Para repartir entre vendedores, primero agregalos en Usuarios.</p>}
+        <Campo label="Nota (opcional)"><input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ej.: conteo del lunes, entrega para la feria" /></Campo>
       </form>
     </Hoja>
   )
