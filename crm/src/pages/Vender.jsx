@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { api } from '../data/api'
-import { useCarga, useAccion, Estado, Pagina, Segmento, Chips, Hoja, Campo, Boton, Cuenta, num } from '../ui'
+import { useCarga, useAccion, Estado, Pagina, Segmento, Chips, Hoja, Campo, Boton, Cuenta, DatosSinpe, num } from '../ui'
 import { colones, nombreProducto } from '../lib/format'
 
 export default function Vender() {
@@ -185,12 +185,14 @@ function Cobro({ abierta, onCerrar, lineas, subtotal, agregar, clientes, canal, 
           <input type="number" inputMode="numeric" value={recibido} onChange={(e) => setRecibido(num(e.target.value))} placeholder={String(total)} />
         </Campo>
       )}
+      {forma === 'sinpe' && <DatosSinpe monto={total} />}
       {forma === 'fiado' && (
         <>
           <Campo label="Abono ahora (opcional)" ayuda={`Queda debiendo ${colones(total - Math.min(Number(abono) || 0, total))}`}>
             <input type="number" inputMode="numeric" value={abono} onChange={(e) => setAbono(num(e.target.value))} placeholder="0" />
           </Campo>
           {Number(abono) > 0 && <Cuenta valor={cuentaAbono} onChange={setCuentaAbono} />}
+          {Number(abono) > 0 && cuentaAbono === 'banco' && <DatosSinpe monto={Math.min(Number(abono), total)} />}
         </>
       )}
 

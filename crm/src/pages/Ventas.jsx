@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { api } from '../data/api'
 import { useAuth } from '../auth'
-import { useCarga, useAccion, Estado, Pagina, Chips, MesNav, Lista, Fila, Hoja, Campo, Boton, Cuenta, Etiqueta, Vacio, num } from '../ui'
+import { useCarga, useAccion, Estado, Pagina, Chips, MesNav, Lista, Fila, Hoja, Campo, Boton, Cuenta, Etiqueta, Vacio, DatosSinpe, num } from '../ui'
 import { colones, inicioMes, finMes, fechaCorta, hora, sumar, CANALES, descargarCSV } from '../lib/format'
 import { useNombres } from '../lib/nombres'
 
@@ -125,6 +125,7 @@ export function VentaDetalle({ venta, cliente, onCerrar, onCambio }) {
             <input type="number" inputMode="numeric" value={monto} onChange={(e) => setMonto(num(e.target.value))} placeholder={String(saldo)} />
           </Campo>
           <Cuenta valor={cuenta} onChange={setCuenta} />
+          {cuenta === 'banco' && <DatosSinpe monto={Number(monto) || saldo} />}
           <Boton variante="pri" disabled={ocupado} onClick={cobrar}>Registrar cobro</Boton>
         </div>
       )}

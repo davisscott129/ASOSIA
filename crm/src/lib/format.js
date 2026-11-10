@@ -40,3 +40,7 @@ export function descargarCSV(nombre, filas) {
   a.download = nombre
   a.click()
 }
+
+// Número que recibe los SINPE Móvil de la asociación
+export const SINPE = { numero: '84064260', nombre: 'Matías Hernández' }
+export const sinpeBonito = (n = SINPE.numero) => n.replace(/(\d{4})(\d{4})/, '$1-$2')

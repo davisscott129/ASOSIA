@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { colones, nombreMes } from './lib/format'
+import { colones, nombreMes, SINPE, sinpeBonito } from './lib/format'
 
 // ---------- datos ----------
 export function useCarga(fn, deps = []) {
@@ -219,5 +219,21 @@ export function Marca({ claro }) {
     <span className={`marca ${claro ? 'marca-clara' : ''}`} aria-label="asoSIA">
       aso<b>S</b><b>I</b><b>A</b>
     </span>
+  )
+}
+
+// Muestra a qué número hacer el SINPE, con botón para copiarlo
+export function DatosSinpe({ monto }) {
+  const aviso = useAviso()
+  const copiar = async () => {
+    try { await navigator.clipboard.writeText(SINPE.numero); aviso('Número copiado') } catch { aviso(`SINPE: ${sinpeBonito()}`) }
+  }
+  return (
+    <div className="sinpe">
+      <span className="sinpe-label">SINPE Móvil{monto ? ` por ${colones(monto)}` : ''} a</span>
+      <strong className="sinpe-num num">{sinpeBonito()}</strong>
+      <span className="sinpe-nombre">{SINPE.nombre}</span>
+      <button type="button" className="btn btn-sec" onClick={copiar}>Copiar número</button>
+    </div>
   )
 }

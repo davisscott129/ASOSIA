@@ -333,6 +333,11 @@ textarea { resize: vertical; }
 .tres-col { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
 @media (max-width: 480px) { .tres-col { grid-template-columns: 1fr 1fr; } .tres-col > :first-child { grid-column: 1 / -1; } }
 .enlace.en-texto { padding: 0; font-size: inherit; }
+.sinpe { display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'label btn' 'num btn' 'nombre btn'; align-items: center; gap: 0 12px; padding: 12px 14px; border-radius: var(--radio); background: #e6f3f7; border: 1px solid #b9dce7; }
+.sinpe-label { grid-area: label; font-size: 13px; color: var(--tenue); font-weight: 600; }
+.sinpe-num { grid-area: num; font-family: var(--display); font-size: 30px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.15; }
+.sinpe-nombre { grid-area: nombre; font-size: 14px; }
+.sinpe .btn { grid-area: btn; }
 .nota { margin: 0; padding: 10px 12px; background: #f4f8f9; border-radius: var(--radio-sm); font-size: 14px; }
 .error-txt { color: var(--rojo); margin: 0; }
 
