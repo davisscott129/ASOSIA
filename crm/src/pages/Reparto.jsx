@@ -16,7 +16,7 @@ function porPersona(filas) {
 }
 
 export default function Reparto() {
-  const { esStaff, perfil } = useAuth()
+  const { esStaff, esAdmin, perfil } = useAuth()
   const [entregar, setEntregar] = useState(null)
   const [recoger, setRecoger] = useState(null)
   const carga = useCarga(async () => {
@@ -33,7 +33,24 @@ export default function Reparto() {
   const d = carga.data
   const personas = d ? porPersona(d.filas) : []
   const mio = personas.find((p) => p.email === perfil.email)
-  const otros = personas.filter((p) => p.email !== perfil.email)
+  // Equipo: solo quien tiene algo en la mano, y solo los productos que tiene
+  const otros = personas
+    .filter((p) => p.email !== perfil.email)
+    .map((p) => ({ ...p, productos: p.productos.filter((f) => Number(f.tiene) > 0) }))
+    .filter((p) => p.productos.length > 0)
+  // Admin: todo lo que no está repartido (bodega) + lo que tenga a su nombre, y lo que él vendió
+  const mioVista = !d ? null : esAdmin ? {
+    email: perfil.email, nombre: perfil.nombre,
+    productos: d.productos.map((pr) => {
+      const disp = d.disponible.get(pr.id)
+      const propio = mio?.productos.find((f) => f.producto_id === pr.id)
+      return {
+        producto_id: pr.id, email: perfil.email, producto: pr.variante ? `${pr.nombre} · ${pr.variante}` : pr.nombre,
+        tiene: Number(disp?.bodega || 0) + Number(disp?.mio || 0), propio: Number(disp?.mio || 0),
+        vendido: Number(propio?.vendido || 0), monto_vendido: Number(propio?.monto_vendido || 0),
+      }
+    }).filter((f) => f.tiene > 0 || f.vendido > 0),
+  } : mio ? { ...mio, productos: mio.productos.filter((f) => Number(f.tiene) > 0 || Number(f.vendido) > 0) } : null
   const nombreDe = (email) => (email == null ? 'Bodega' : d?.equipo.find((e) => e.email === email)?.nombre || personas.find((p) => p.email === email)?.nombre || email)
   const prodNombre = (id) => {
     const p = d?.productos.find((x) => x.id === id)
@@ -46,9 +63,10 @@ export default function Reparto() {
       <Estado carga={carga}>
         {d && (
           <>
-            <Seccion titulo={esStaff ? 'Lo que tenés vos' : 'Lo que tenés asignado'}>
-              {mio?.productos.some((p) => p.tiene > 0 || p.vendido > 0) ? (
-                <TablaPersona persona={mio} onRecoger={(f) => setRecoger({ ...f, propio: true })} />
+            <Seccion titulo={esAdmin ? 'Inventario de la asociación' : esStaff ? 'Lo que tenés vos' : 'Lo que tenés asignado'}>
+              {esAdmin && <p className="tenue pad">Todo lo que no está repartido queda a tu cargo.</p>}
+              {mioVista?.productos.length ? (
+                <TablaPersona persona={mioVista} onRecoger={esAdmin ? null : (f) => setRecoger({ ...f, propio: true })} />
               ) : (
                 <p className="tenue pad">
                   {esStaff ? 'No tenés inventario asignado. Cuando vendés, sale de la bodega.' : 'Todavía no te han entregado inventario. Pedile a un manager que te asigne productos para vender.'}
@@ -71,7 +89,7 @@ export default function Reparto() {
                     </div>
                     <TablaPersona persona={p} onRecoger={(f) => setRecoger(f)} />
                   </div>
-                )) : <Vacio accion={<Boton variante="pri" onClick={() => setEntregar({})}>Entregar inventario</Boton>}>Nadie del equipo tiene inventario asignado todavía.</Vacio>}
+                )) : <Vacio accion={<Boton variante="pri" onClick={() => setEntregar({})}>Entregar inventario</Boton>}>Nadie del equipo tiene inventario en la mano.</Vacio>}
               </Seccion>
             )}
 
@@ -106,10 +124,10 @@ function TablaPersona({ persona, onRecoger }) {
       <div className="tr-cab"><span>Producto</span><span>Tiene</span><span>Vendió</span><span /></div>
       {persona.productos.map((f) => (
         <div key={f.producto_id} className="tr-fila">
-          <span className="tr-prod">{f.producto}<small>recibió {f.recibido}{f.devuelto > 0 ? ` · devolvió ${f.devuelto}` : ''}</small></span>
+          <span className="tr-prod">{f.producto}</span>
           <span className="num tr-tiene">{f.tiene}</span>
           <span className="num">{f.vendido}<small>{colones(f.monto_vendido)}</small></span>
-          <span>{f.tiene > 0 && <button className="icono-btn" title="Devolver a bodega" aria-label={`Devolver ${f.producto} a bodega`} onClick={() => onRecoger(f)}><Undo2 size={17} /></button>}</span>
+          <span>{onRecoger && f.tiene > 0 && <button className="icono-btn" title="Devolver a bodega" aria-label={`Devolver ${f.producto} a bodega`} onClick={() => onRecoger(f)}><Undo2 size={17} /></button>}</span>
         </div>
       ))}
     </div>
