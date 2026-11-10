@@ -1,0 +1,21 @@
+{
+  "name": "asoSIA CRM",
+  "short_name": "asoSIA",
+  "description": "Inventario, ventas y finanzas de la Asociación de Estudiantes de la Sede Interuniversitaria de Alajuela",
+  "lang": "es",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf8e6",
+  "theme_color": "#183e4e",
+  "icons": [
+    { "src": "icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Vender", "short_name": "Vender", "url": "./#/vender", "icons": [{ "src": "icono-192.png", "sizes": "192x192" }] },
+    { "name": "Fiados", "short_name": "Fiados", "url": "./#/ventas?f=fiados", "icons": [{ "src": "icono-192.png", "sizes": "192x192" }] }
+  ]
+}

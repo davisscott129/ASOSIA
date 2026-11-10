@@ -1,25 +1,46 @@
 import { useMemo, useState } from 'react'
 import { Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { api } from '../data/api'
-import { useCarga, useAccion, Estado, Segmento, Chips, Hoja, Campo, Boton, Cuenta, DatosSinpe, num, Isotipo, PuntoCat } from '../ui'
+import { useCarga, useAccion, useAviso, Estado, Segmento, Chips, Hoja, Campo, Boton, Cuenta, DatosSinpe, num, Isotipo, PuntoCat } from '../ui'
+import { encolar, esSinConexion } from '../lib/cola'
 import { colones, nombreProducto } from '../lib/format'
+
+const CACHE = 'asosia-cache-vender'
+const hace30dias = () => new Date(Date.now() - 30 * 864e5).toISOString()
 
 export default function Vender() {
   const carga = useCarga(async () => {
-    const [productos, clientes, eventos, disponible] = await Promise.all([
-      api.list('productos', { filtros: [['eq', 'activo', true]], orden: ['nombre'] }),
-      api.list('clientes', { orden: ['nombre'] }),
-      api.list('eventos', { filtros: [['neq', 'estado', 'cerrado']], orden: ['fecha'] }),
-      api.rpc('mi_disponible'),
-    ])
+    let datos
+    try {
+      const [productos, clientes, eventos, disponible, recientes] = await Promise.all([
+        api.list('productos', { filtros: [['eq', 'activo', true]], orden: ['nombre'] }),
+        api.list('clientes', { orden: ['nombre'] }),
+        api.list('eventos', { filtros: [['neq', 'estado', 'cerrado']], orden: ['fecha'] }),
+        api.rpc('mi_disponible'),
+        api.list('ventas', { select: '*, venta_items(*)', filtros: [['gte', 'fecha', hace30dias()], ['neq', 'estado', 'anulada']] }).catch(() => []),
+      ])
+      // Cuántas unidades se vendieron de cada producto en los últimos 30 días
+      const vendidos = {}
+      for (const v of recientes) for (const it of v.venta_items || []) vendidos[it.producto_id] = (vendidos[it.producto_id] || 0) + Number(it.cantidad || 0)
+      datos = { productos, clientes, eventos, disponible, vendidos }
+      if (api.modo !== 'demo') { try { localStorage.setItem(CACHE, JSON.stringify(datos)) } catch { /* */ } }
+    } catch (e) {
+      // Sin internet: usar lo último que se cargó en este celular
+      let guardado = null
+      try { guardado = JSON.parse(localStorage.getItem(CACHE) || 'null') } catch { /* */ }
+      if (!guardado || !esSinConexion(e)) throw e
+      datos = { ...guardado, sinConexion: true }
+    }
+    const { productos, clientes, eventos, disponible, vendidos } = datos
     // Lo que cada quien puede vender: lo suyo + la bodega (solo admin/manager)
     const disp = new Map((disponible || []).map((d) => [d.producto_id, d]))
     productos.forEach((p) => {
       const d = disp.get(p.id)
       p.mio = d ? Number(d.mio) : 0
       p.vendible = p.es_servicio ? Infinity : d ? Number(d.mio) + Number(d.bodega) : 0
+      p.vendidos = vendidos?.[p.id] || 0
     })
-    return { productos, clientes, eventos }
+    return { productos, clientes, eventos, sinConexion: datos.sinConexion }
   })
   return (
     <div className="pagina">
@@ -55,6 +76,10 @@ function Caja({ d, recargar }) {
       (canal !== 'asodita' || p.en_asodita) && (cat === 'todo' || p.categoria === cat) &&
       (!t || nombreProducto(p).toLowerCase().includes(t)))
   }, [d.productos, canal, cat, buscar])
+  const masVendidos = cat === 'todo' && !buscar.trim()
+    ? [...visibles].filter((p) => p.vendidos > 0).sort((a, b) => b.vendidos - a.vendidos).slice(0, 6)
+    : []
+  const resto = visibles.filter((p) => !masVendidos.includes(p))
   const categorias = [...new Set(d.productos.filter((p) => canal !== 'asodita' || p.en_asodita).map((p) => p.categoria))].sort()
 
   const lineas = Object.entries(carrito).map(([id, cant]) => ({ p: d.productos.find((x) => x.id === Number(id)), cant })).filter((l) => l.p)
@@ -90,33 +115,19 @@ function Caja({ d, recargar }) {
       </div>
       <Chips opciones={[['todo', 'Todo'], ...categorias.map((c) => [c, <><PuntoCat cat={c} />{c}</>])]} valor={cat} onChange={setCat} />
 
+      {d.sinConexion && <p className="aviso-linea">Sin internet: estás viendo los productos guardados en este celular. Las ventas se guardan y se suben solas al volver la señal.</p>}
+
       {visibles.length ? (
-        <div className="prod-lista">
-          {visibles.map((p) => {
-            const enCarrito = carrito[p.id] || 0
-            const agotado = !p.es_servicio && p.vendible - enCarrito <= 0
-            const estado = p.es_servicio ? 'servicio' : p.vendible <= 0 ? (p.stock > 0 ? 'sin asignar' : 'agotado') : p.mio > 0 ? `${Math.max(Math.min(p.mio, p.vendible) - enCarrito, 0)} tuyos` : `${p.vendible - enCarrito} u`
-            return (
-              <div key={p.id} className={`prod-fila ${agotado && !enCarrito ? 'agotado' : ''}`}>
-                <PuntoCat cat={p.categoria} />
-                <div className="prod-info">
-                  <div><span className="prod-nom">{p.nombre}</span>{p.variante && <span className="prod-var"> · {p.variante}</span>}</div>
-                  <div className={`prod-stock ${!p.es_servicio && p.vendible <= p.stock_minimo ? 'bajo' : ''}`}>{estado}</div>
-                </div>
-                <span className="prod-precio num">{colones(p.precio)}</span>
-                <div className="prod-acc">
-                  {enCarrito > 0 && (
-                    <>
-                      <button type="button" className="btn-redondo suave" onClick={() => agregar(p, -1)} aria-label={`Quitar un ${p.nombre}`}><Minus size={18} /></button>
-                      <span className="cant num" aria-live="polite">{enCarrito}</span>
-                    </>
-                  )}
-                  <button type="button" className="btn-redondo" disabled={agotado} onClick={() => agregar(p)} aria-label={`Agregar ${nombreProducto(p)}`}><Plus size={20} strokeWidth={2.6} /></button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <>
+          {masVendidos.length > 0 && (
+            <>
+              <h2 className="sub-lista">Más vendidos</h2>
+              <div className="prod-lista">{masVendidos.map((p) => <FilaProducto key={p.id} p={p} enCarrito={carrito[p.id] || 0} agregar={agregar} />)}</div>
+              <h2 className="sub-lista">Todos</h2>
+            </>
+          )}
+          <div className="prod-lista">{resto.map((p) => <FilaProducto key={p.id} p={p} enCarrito={carrito[p.id] || 0} agregar={agregar} />)}</div>
+        </>
       ) : <p className="tenue pad">Ningún producto coincide.</p>}
 
       {unidades > 0 && (
@@ -132,14 +143,39 @@ function Caja({ d, recargar }) {
       <Cobro
         abierta={abierta} onCerrar={() => setAbierta(false)} lineas={lineas} subtotal={subtotal} agregar={agregar}
         clientes={d.clientes} canal={canal} eventoId={canal === 'evento' ? eventoId : null}
-        listo={() => { setCarrito({}); setAbierta(false); recargar() }}
+        listo={(offline) => { setCarrito({}); setAbierta(false); if (!offline) recargar() }}
       />
     </>
   )
 }
 
+function FilaProducto({ p, enCarrito, agregar }) {
+  const agotado = !p.es_servicio && p.vendible - enCarrito <= 0
+  const estado = p.es_servicio ? 'servicio' : p.vendible <= 0 ? (p.stock > 0 ? 'sin asignar' : 'agotado') : p.mio > 0 ? `${Math.max(Math.min(p.mio, p.vendible) - enCarrito, 0)} tuyos` : `${p.vendible - enCarrito} u`
+  return (
+    <div className={`prod-fila ${agotado && !enCarrito ? 'agotado' : ''}`}>
+      <PuntoCat cat={p.categoria} />
+      <div className="prod-info">
+        <div><span className="prod-nom">{p.nombre}</span>{p.variante && <span className="prod-var"> · {p.variante}</span>}</div>
+        <div className={`prod-stock ${!p.es_servicio && p.vendible <= p.stock_minimo ? 'bajo' : ''}`}>{estado}</div>
+      </div>
+      <span className="prod-precio num">{colones(p.precio)}</span>
+      <div className="prod-acc">
+        {enCarrito > 0 && (
+          <>
+            <button type="button" className="btn-redondo suave" onClick={() => agregar(p, -1)} aria-label={`Quitar un ${p.nombre}`}><Minus size={18} /></button>
+            <span className="cant num" aria-live="polite">{enCarrito}</span>
+          </>
+        )}
+        <button type="button" className="btn-redondo" disabled={agotado} onClick={() => agregar(p)} aria-label={`Agregar ${nombreProducto(p)}`}><Plus size={20} strokeWidth={2.6} /></button>
+      </div>
+    </div>
+  )
+}
+
 function Cobro({ abierta, onCerrar, lineas, subtotal, agregar, clientes, canal, eventoId, listo }) {
   const [correr, ocupado] = useAccion()
+  const aviso = useAviso()
   const [forma, setForma] = useState('efectivo')
   const [recibido, setRecibido] = useState('')
   const [abono, setAbono] = useState('')
@@ -159,19 +195,30 @@ function Cobro({ abierta, onCerrar, lineas, subtotal, agregar, clientes, canal, 
     if (c) { setLista((l) => [...l, c].sort((a, b) => a.nombre.localeCompare(b.nombre))); setClienteId(c.id); setNuevoCliente(null) }
   }
 
+  const limpiar = () => { setRecibido(''); setAbono(''); setDescuento(''); setClienteId(''); setNotas(''); setForma('efectivo') }
+
   const guardar = async () => {
     const pago = forma === 'fiado' ? Math.min(Number(abono) || 0, total) : total
-    const id = await correr(() => api.rpc('registrar_venta', {
-      p: {
-        canal, evento_id: eventoId || null, cliente_id: clienteId || null, descuento: Number(descuento) || 0, notas: notas || null,
-        items: lineas.map((l) => ({ producto_id: l.p.id, cantidad: l.cant })),
-        pago, cuenta: forma === 'fiado' ? cuentaAbono : forma === 'sinpe' ? 'banco' : 'efectivo',
-      },
-    }), (id) => `Venta #${id} guardada`)
-    if (id) {
-      setRecibido(''); setAbono(''); setDescuento(''); setClienteId(''); setNotas(''); setForma('efectivo')
-      listo()
+    const p = {
+      canal, evento_id: eventoId || null, cliente_id: clienteId || null, descuento: Number(descuento) || 0, notas: notas || null,
+      items: lineas.map((l) => ({ producto_id: l.p.id, cantidad: l.cant })),
+      pago, cuenta: forma === 'fiado' ? cuentaAbono : forma === 'sinpe' ? 'banco' : 'efectivo',
     }
+    const guardarEnCelular = () => {
+      encolar(p, { total, productos: lineas.map((l) => `${l.cant}× ${nombreProducto(l.p)}`).join(', ') })
+      aviso('Sin internet: la venta quedó guardada en el celular y se sube sola')
+      limpiar(); listo(true)
+    }
+    if (api.modo !== 'demo' && navigator.onLine === false) return guardarEnCelular()
+    let sinRed = false
+    const id = await correr(async () => {
+      try { return await api.rpc('registrar_venta', { p }) } catch (e) {
+        if (api.modo !== 'demo' && esSinConexion(e)) { sinRed = true; return null }
+        throw e
+      }
+    }, (id) => (id ? `Venta #${id} guardada` : null))
+    if (sinRed) return guardarEnCelular()
+    if (id) { limpiar(); listo() }
   }
 
   return (

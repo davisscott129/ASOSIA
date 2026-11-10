@@ -44,7 +44,8 @@ export function useAccion() {
     setOcupado(true)
     try {
       const r = await fn()
-      if (exito) aviso(typeof exito === 'function' ? exito(r) : exito)
+      const msg = typeof exito === 'function' ? exito(r) : exito
+      if (msg) aviso(msg)
       return r ?? true
     } catch (e) {
       aviso(e.message, 'error')
