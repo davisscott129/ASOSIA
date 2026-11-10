@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { api } from '../data/api'
 import { useCarga, useAccion, Estado, Pagina, Segmento, Lista, Fila, Hoja, Campo, Boton, Cuenta, Etiqueta, Vacio, num } from '../ui'
 import { colones, fechaCorta, isoDia, nombreProducto, sumar } from '../lib/format'
+import { useNombres } from '../lib/nombres'
 
 export default function Compras() {
   const [tab, setTab] = useState('compras')
@@ -142,6 +143,7 @@ function NuevaCompra({ d, onCerrar, onListo }) {
 }
 
 function DetalleCompra({ compra, proveedor, onCerrar, onListo }) {
+  const nombre = useNombres()
   const saldo = compra.total - compra.pagado
   const [monto, setMonto] = useState('')
   const [cuenta, setCuenta] = useState('efectivo')
@@ -152,7 +154,7 @@ function DetalleCompra({ compra, proveedor, onCerrar, onListo }) {
   }
   return (
     <Hoja abierta titulo={`Compra #${compra.id}`} onCerrar={onCerrar}>
-      <p className="tenue">{fechaCorta(compra.fecha)} · {proveedor?.nombre || 'Sin proveedor'}{compra.creado_por && <><br />Registró: {compra.creado_por}</>}</p>
+      <p className="tenue">{fechaCorta(compra.fecha)} · {proveedor?.nombre || 'Sin proveedor'}{compra.creado_por && <><br />Registró: {nombre(compra.creado_por)}</>}</p>
       <Lista>
         {compra.compra_items.map((i) => <Fila key={i.id} titulo={i.nombre} sub={`${i.cantidad} × ${colones(i.costo)}`} derecha={colones(i.cantidad * i.costo)} />)}
         <Fila titulo={<strong>Total</strong>} derecha={<strong>{colones(compra.total)}</strong>} derechaSub={`pagado ${colones(compra.pagado)}`} />

@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { KeyRound } from 'lucide-react'
+import { KeyRound, UserRound } from 'lucide-react'
 import { api } from '../data/api'
 import { useAuth } from '../auth'
 import { useAccion, Pagina, Campo, Boton, Marca } from '../ui'
 import { ROLES } from '../lib/format'
+import { olvidarNombres } from '../lib/nombres'
 
 // Formulario para crear o cambiar la contraseña. Los autocomplete hacen que el
 // celular ofrezca guardarla y luego llenarla con Face ID o huella.
@@ -56,11 +57,32 @@ export function CrearClave() {
   )
 }
 
+function FormNombre({ actual, onListo }) {
+  const [nombre, setNombre] = useState(actual || '')
+  const [correr, ocupado] = useAccion()
+  const guardar = async (e) => {
+    e.preventDefault()
+    if (await correr(() => api.rpc('cambiar_mi_nombre', { p_nombre: nombre }), 'Nombre guardado')) { olvidarNombres(); onListo?.() }
+  }
+  return (
+    <form className="form" onSubmit={guardar}>
+      <Campo label="Tu nombre" ayuda="Así aparecés en las ventas y en el reparto de inventario.">
+        <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={60} required autoComplete="name" placeholder="Ej.: Matías Hernández" />
+      </Campo>
+      <Boton variante="pri" disabled={ocupado || !nombre.trim() || nombre.trim() === actual}>Guardar nombre</Boton>
+    </form>
+  )
+}
+
 export default function Cuenta() {
   const { perfil, salir, refrescar } = useAuth()
   return (
     <Pagina titulo="Mi cuenta" atras="/mas">
-      <p className="tenue pad">{perfil.nombre ? `${perfil.nombre} · ` : ''}{perfil.email} · {ROLES[perfil.rol]}</p>
+      <p className="tenue pad">{perfil.email} · {ROLES[perfil.rol]}</p>
+      <div className="bloque">
+        <h3 className="con-icono"><UserRound size={18} /> Nombre</h3>
+        <FormNombre actual={perfil.nombre} onListo={refrescar} />
+      </div>
       <div className="bloque">
         <h3 className="con-icono"><KeyRound size={18} /> Cambiar contraseña</h3>
         <p className="tenue">Si el celular te ofrece actualizar la contraseña guardada, aceptá para que siga llenándola con Face ID o huella.</p>

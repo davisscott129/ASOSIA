@@ -23,6 +23,7 @@ export default function Login({ sinAcceso }) {
     try { await api.loginClave(email, clave) } catch (err) { setEstado({ error: err.message }) }
   }
   
+  const [miNombre, setMiNombre] = useState('')
   const [nueva, setNueva] = useState('')
   const [nueva2, setNueva2] = useState('')
   const verificar = async (e) => {
@@ -35,6 +36,7 @@ export default function Login({ sinAcceso }) {
       try { sessionStorage.setItem('asosia-crear-clave', '1') } catch { /* */ }
       await api.verificarCodigo(email, codigo)
       await api.crearClave(nueva)
+      if (miNombre.trim()) await api.rpc('cambiar_mi_nombre', { p_nombre: miNombre }).catch(() => {})
       refrescar()
     } catch (err) {
       setEstado({ enviado: true, error: err.message })
@@ -92,6 +94,9 @@ export default function Login({ sinAcceso }) {
               <Campo label="Código del correo">
                 <input inputMode="numeric" autoComplete="one-time-code" required minLength={6} maxLength={10} value={codigo}
                   onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} placeholder="123456" autoFocus />
+              </Campo>
+              <Campo label="Tu nombre" ayuda="Así vas a aparecer en las ventas. Dejalo vacío si ya lo tenés.">
+                <input value={miNombre} onChange={(e) => setMiNombre(e.target.value)} maxLength={60} autoComplete="name" placeholder="Ej.: Matías Hernández" />
               </Campo>
               <Campo label="Contraseña nueva" ayuda="Mínimo 8 caracteres. Cuando el celular pregunte si guardarla, decile que sí.">
                 <input type="password" name="new-password" autoComplete="new-password" required minLength={8} value={nueva} onChange={(e) => setNueva(e.target.value)} />

@@ -4,6 +4,7 @@ import { Plus, Download, ArrowLeftRight, Scale } from 'lucide-react'
 import { api } from '../data/api'
 import { useCarga, useAccion, Estado, Pagina, Segmento, Seccion, MesNav, Lista, Fila, Hoja, Campo, Boton, Cuenta, Chips, Etiqueta, Vacio, Dinero, num } from '../ui'
 import { colones, inicioMes, finMes, isoDia, fechaCorta, hora, sumar, nombreMes, CATEGORIAS_GASTO, descargarCSV } from '../lib/format'
+import { useNombres } from '../lib/nombres'
 
 export default function Finanzas() {
   const [params, setParams] = useSearchParams()
@@ -261,6 +262,7 @@ function NuevoGasto({ d, onCerrar, onListo }) {
 }
 
 function DetalleGasto({ gasto, onCerrar, onListo }) {
+  const nombre = useNombres()
   const [cuenta, setCuenta] = useState('efectivo')
   const [confirmar, setConfirmar] = useState(false)
   const [correr, ocupado] = useAccion()
@@ -271,7 +273,7 @@ function DetalleGasto({ gasto, onCerrar, onListo }) {
         <Fila titulo="Fecha" derecha={fechaCorta(gasto.fecha)} />
         <Fila titulo="Categoría" derecha={gasto.categoria} />
         <Fila titulo="Estado" derecha={gasto.anulado ? 'Anulado' : gasto.pagado ? `Pagado con ${gasto.cuenta}` : 'Sin pagar'} />
-        {gasto.creado_por && <Fila titulo="Registró" derecha={gasto.creado_por} />}
+        {gasto.creado_por && <Fila titulo="Registró" derecha={nombre(gasto.creado_por)} />}
       </Lista>
       {!gasto.pagado && !gasto.anulado && (
         <div className="bloque">

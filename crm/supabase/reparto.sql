@@ -259,3 +259,23 @@ end $$;
 
 revoke execute on all functions in schema public from anon, public;
 grant execute on all functions in schema public to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Nombres de perfil
+-- ---------------------------------------------------------------------
+create or replace function cambiar_mi_nombre(p_nombre text) returns void
+language plpgsql security definer set search_path = public as $$
+declare n text := nullif(trim(p_nombre), '');
+begin
+  if not tiene_acceso() then raise exception 'Sin permiso'; end if;
+  if n is null or length(n) > 60 then raise exception 'Escribí un nombre de hasta 60 letras'; end if;
+  update autorizados set nombre = n where email = _mi_email();
+end $$;
+
+create or replace function nombres_equipo() returns table (email text, nombre text)
+language sql stable security definer set search_path = public as $$
+  select a.email, coalesce(a.nombre, a.email) from autorizados a where tiene_acceso()
+$$;
+
+revoke execute on all functions in schema public from anon, public;
+grant execute on all functions in schema public to authenticated;

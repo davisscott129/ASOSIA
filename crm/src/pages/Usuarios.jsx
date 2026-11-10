@@ -4,6 +4,7 @@ import { api } from '../data/api'
 import { useAuth } from '../auth'
 import { useCarga, useAccion, Estado, Pagina, Lista, Fila, Hoja, Campo, Boton, Segmento, Etiqueta } from '../ui'
 import { ROLES } from '../lib/format'
+import { olvidarNombres } from '../lib/nombres'
 
 const DESCRIPCION = {
   admin: 'Todo, incluido crear y editar perfiles.',
@@ -45,7 +46,7 @@ function EditarUsuario({ u, onCerrar, onListo }) {
         ? api.insertar('autorizados', { email: f.email.trim().toLowerCase(), nombre: f.nombre.trim() || null, rol: f.rol, activo: true })
         : api.actualizar('autorizados', u.email, { nombre: f.nombre.trim() || null, rol: f.rol, activo: f.activo }, 'email')),
       nuevo ? `${f.email} ya puede entrar` : 'Usuario actualizado')
-    if (ok) onListo()
+    if (ok) { olvidarNombres(); onListo() }
   }
   const borrar = async () => { if (await correr(() => api.borrar('autorizados', u.email, 'email'), 'Usuario eliminado')) onListo() }
   return (
@@ -54,7 +55,7 @@ function EditarUsuario({ u, onCerrar, onListo }) {
         <Campo label="Correo" ayuda={nuevo ? 'El mismo con el que va a entrar. Gmail funciona con el botón de Google.' : null}>
           <input type="email" required disabled={!nuevo} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="nombre@gmail.com" />
         </Campo>
-        <Campo label="Nombre"><input value={f.nombre || ''} onChange={(e) => setF({ ...f, nombre: e.target.value })} placeholder="Tesorería, Junta, nombre de la persona…" /></Campo>
+        <Campo label="Nombre"><input value={f.nombre || ''} onChange={(e) => setF({ ...f, nombre: e.target.value })} placeholder="Nombre de la persona (ella también lo puede cambiar)" /></Campo>
         <Campo label="Rol" ayuda={DESCRIPCION[f.rol]} grupo>
           <Segmento opciones={[['admin', 'Admin'], ['manager', 'Manager'], ['vendedor', 'Vendedor']]} valor={f.rol} onChange={(rol) => setF({ ...f, rol })} />
         </Campo>

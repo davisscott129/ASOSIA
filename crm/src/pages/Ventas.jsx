@@ -5,12 +5,15 @@ import { api } from '../data/api'
 import { useAuth } from '../auth'
 import { useCarga, useAccion, Estado, Pagina, Chips, MesNav, Lista, Fila, Hoja, Campo, Boton, Cuenta, Etiqueta, Vacio, num } from '../ui'
 import { colones, inicioMes, finMes, fechaCorta, hora, sumar, CANALES, descargarCSV } from '../lib/format'
+import { useNombres } from '../lib/nombres'
 
 export default function Ventas() {
   const [params, setParams] = useSearchParams()
   const filtro = params.get('f') || 'todas'
   const [mes, setMes] = useState(inicioMes())
   const [abierta, setAbierta] = useState(null)
+  const [quien, setQuien] = useState('')
+  const nombre = useNombres()
 
   const carga = useCarga(async () => {
     const filtros = filtro === 'fiados'
@@ -29,12 +32,14 @@ export default function Ventas() {
       : filtro === 'anuladas' ? v.estado === 'anulada'
         : filtro === 'fiados' ? true
           : v.canal === filtro && v.estado !== 'anulada')
+    .filter((v) => !quien || v.vendedor_email === quien)
+  const vendedores = [...new Set((carga.data?.ventas || []).map((v) => v.vendedor_email).filter(Boolean))]
 
   const exportar = () => descargarCSV(`ventas-${mes.toISOString().slice(0, 7)}.csv`, ventas.map((v) => ({
     venta: v.id, fecha: new Date(v.fecha).toLocaleString('es-CR'), canal: CANALES[v.canal],
     evento: carga.data.eventos.get(v.evento_id)?.nombre || '', cliente: carga.data.clientes.get(v.cliente_id)?.nombre || '',
     productos: v.venta_items.map((i) => `${i.cantidad}x ${i.nombre}`).join('; '),
-    total: v.total, pagado: v.pagado, estado: v.estado, vendedor: v.vendedor_email,
+    total: v.total, pagado: v.pagado, estado: v.estado, vendedor: nombre(v.vendedor_email),
   })))
 
   return (
@@ -44,6 +49,12 @@ export default function Ventas() {
         valor={filtro} onChange={(f) => setParams(f === 'todas' ? {} : { f })}
       />
       {filtro !== 'fiados' && <MesNav mes={mes} onChange={setMes} />}
+      {vendedores.length > 1 && (
+        <select className="filtro-quien" aria-label="Filtrar por quién vendió" value={quien} onChange={(e) => setQuien(e.target.value)}>
+          <option value="">Vendido por: todos</option>
+          {vendedores.map((e) => <option key={e} value={e}>{nombre(e)}</option>)}
+        </select>
+      )}
       <Estado carga={carga}>
         {carga.data && (
           <>
@@ -57,7 +68,7 @@ export default function Ventas() {
                   <Fila
                     key={v.id} onClick={() => setAbierta(v)}
                     titulo={<>{carga.data.clientes.get(v.cliente_id)?.nombre || `Venta #${v.id}`} {v.estado === 'pendiente' && <Etiqueta tono="rojo">Fiado</Etiqueta>}{v.estado === 'anulada' && <Etiqueta>Anulada</Etiqueta>}</>}
-                    sub={`#${v.id} · ${fechaCorta(v.fecha)} ${hora(v.fecha)} · ${v.canal === 'evento' ? carga.data.eventos.get(v.evento_id)?.nombre || 'Evento' : CANALES[v.canal]}`}
+                    sub={`#${v.id} · ${fechaCorta(v.fecha)} ${hora(v.fecha)} · ${v.canal === 'evento' ? carga.data.eventos.get(v.evento_id)?.nombre || 'Evento' : CANALES[v.canal]}${v.vendedor_email ? ' · ' + nombre(v.vendedor_email) : ''}`}
                     derecha={colones(v.total)}
                     derechaSub={v.estado === 'pendiente' ? `debe ${colones(v.total - v.pagado)}` : null}
                   />
@@ -74,6 +85,7 @@ export default function Ventas() {
 
 export function VentaDetalle({ venta, cliente, onCerrar, onCambio }) {
   const { esStaff } = useAuth()
+  const nombre = useNombres()
   const [correr, ocupado] = useAccion()
   const [monto, setMonto] = useState('')
   const [cuenta, setCuenta] = useState('efectivo')
@@ -97,7 +109,7 @@ export function VentaDetalle({ venta, cliente, onCerrar, onCambio }) {
       <p className="tenue">
         {new Date(venta.fecha).toLocaleString('es-CR', { dateStyle: 'long', timeStyle: 'short' })} · {CANALES[venta.canal]}
         {cliente && <> · {cliente.nombre}</>}
-        {venta.vendedor_email && <><br />Registró: {venta.vendedor_email}</>}
+        {venta.vendedor_email && <><br />Vendió: <strong>{nombre(venta.vendedor_email)}</strong></>}
       </p>
       <Lista>
         {items.map((i) => <Fila key={i.id} titulo={i.nombre} sub={`${i.cantidad} × ${colones(i.precio)}`} derecha={colones(i.cantidad * i.precio)} />)}

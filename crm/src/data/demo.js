@@ -62,6 +62,12 @@ const RPC = {
   inventario_personas() { acceso(); return [] },
   equipo() { staff(); return [] },
   distribuir() { throw new Error('El reparto por persona solo funciona en la app real.') },
+  nombres_equipo() { acceso(); return db.autorizados.map((a) => ({ email: a.email, nombre: a.nombre || a.email })) },
+  cambiar_mi_nombre({ p_nombre }) {
+    acceso()
+    const a = db.autorizados.find((x) => x.email === yo())
+    if (a) a.nombre = String(p_nombre || '').trim() || a.nombre
+  },
   mi_perfil() {
     const u = quien()
     const a = u && db.autorizados.find((x) => x.email === u.email && x.activo)
