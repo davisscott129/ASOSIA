@@ -12,7 +12,7 @@ const ROLES_DEMO = [
 export default function Login({ sinAcceso }) {
   const { usuario, salir, error } = useAuth()
   const [email, setEmail] = useState('')
-  const [estado, setEstado] = useState(null)
+  const [estado, setEstado] = useState(() => (api.avisoInicio ? { error: api.avisoInicio } : null))
   const [codigo, setCodigo] = useState('')
   const conGoogle = import.meta.env.VITE_LOGIN_GOOGLE === '1'
 
@@ -71,7 +71,7 @@ export default function Login({ sinAcceso }) {
         ) : estado?.enviado ? (
           <>
             <h1>Revisá tu correo</h1>
-            <p className="tenue">Te enviamos un correo a <strong>{email}</strong>. Escribí el código que trae, o abrí el enlace en este mismo navegador.</p>
+            <p className="tenue">Te enviamos un correo a <strong>{email}</strong>. Escribí el código que trae, o tocá el botón del correo.</p>
             <form onSubmit={verificar} className="form">
               <Campo label="Código del correo">
                 <input inputMode="numeric" autoComplete="one-time-code" required minLength={6} maxLength={10} value={codigo}

@@ -15,6 +15,20 @@ const MENSAJES = [
   [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá un rato e intentá de nuevo.'],
   [/Failed to fetch/i, 'Sin conexión. Revisá el internet e intentá de nuevo.'],
 ]
+// Enlace del correo con token_hash: funciona desde cualquier navegador o celular
+// (la plantilla del correo apunta a {{ .SiteURL }}/?token_hash=...&type=email)
+let avisoInicio = null
+const verificacionEnlace = (() => {
+  if (!sb) return Promise.resolve()
+  const q = new URLSearchParams(window.location.search)
+  const token_hash = q.get('token_hash')
+  if (!token_hash) return Promise.resolve()
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+  return sb.auth.verifyOtp({ token_hash, type: q.get('type') || 'email' })
+    .then(({ error }) => { if (error) avisoInicio = 'Ese enlace ya se usó o venció. Pedí un código nuevo.' })
+    .catch(() => { avisoInicio = 'No se pudo usar el enlace. Pedí un código nuevo.' })
+})()
+
 function fallo(error) {
   const m = error?.message || String(error)
   const t = MENSAJES.find(([r]) => r.test(m))
@@ -24,7 +38,9 @@ function fallo(error) {
 export const backend = {
   modo: 'supabase',
 
+  get avisoInicio() { return avisoInicio },
   async usuario() {
+    await verificacionEnlace
     const { data } = await sb.auth.getSession()
     return data.session?.user ? { email: data.session.user.email } : null
   },
