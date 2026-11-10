@@ -10,6 +10,7 @@ const MENSAJES = [
   [/row-level security/i, 'Tu rol no tiene permiso para hacer esto.'],
   [/duplicate key.*autorizados/i, 'Ese correo ya tiene acceso.'],
   [/violates foreign key/i, 'No se puede borrar porque tiene registros asociados.'],
+  [/rate limit/i, 'Se mandaron demasiados correos en poco tiempo. Esperá una hora o entrá con Google.'],
   [/Failed to fetch/i, 'Sin conexión. Revisá el internet e intentá de nuevo.'],
 ]
 function fallo(error) {
