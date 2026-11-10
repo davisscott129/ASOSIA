@@ -10,7 +10,7 @@ const ROLES_DEMO = [
 ]
 
 export default function Login({ sinAcceso }) {
-  const { usuario, salir, error } = useAuth()
+  const { usuario, salir, error, refrescar } = useAuth()
   const [email, setEmail] = useState('')
   const [estado, setEstado] = useState(() => (api.avisoInicio ? { error: api.avisoInicio } : null))
   const [codigo, setCodigo] = useState('')
@@ -23,12 +23,19 @@ export default function Login({ sinAcceso }) {
     try { await api.loginClave(email, clave) } catch (err) { setEstado({ error: err.message }) }
   }
   
+  const [nueva, setNueva] = useState('')
+  const [nueva2, setNueva2] = useState('')
   const verificar = async (e) => {
     e.preventDefault()
+    if (nueva.length < 8) return setEstado({ enviado: true, error: 'La contraseña debe tener al menos 8 caracteres.' })
+    if (nueva !== nueva2) return setEstado({ enviado: true, error: 'Las dos contraseñas no coinciden.' })
     setEstado({ enviado: true, cargando: true })
     try {
+      // Si algo falla después del código, la app igual pide crear la contraseña antes de entrar
       try { sessionStorage.setItem('asosia-crear-clave', '1') } catch { /* */ }
       await api.verificarCodigo(email, codigo)
+      await api.crearClave(nueva)
+      refrescar()
     } catch (err) {
       setEstado({ enviado: true, error: err.message })
     }
@@ -78,14 +85,21 @@ export default function Login({ sinAcceso }) {
           </>
         ) : estado?.enviado ? (
           <>
-            <h1>Revisá tu correo</h1>
-            <p className="tenue">Te enviamos un correo a <strong>{email}</strong>. Escribí el código que trae, o tocá el botón del correo.</p>
+            <h1>Creá tu contraseña</h1>
+            <p className="tenue">Te mandamos un código a <strong>{email}</strong>. Escribilo y elegí la contraseña con la que vas a entrar de ahora en adelante.</p>
             <form onSubmit={verificar} className="form">
+              <input type="email" name="username" autoComplete="username" value={email} readOnly hidden />
               <Campo label="Código del correo">
                 <input inputMode="numeric" autoComplete="one-time-code" required minLength={6} maxLength={10} value={codigo}
                   onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} placeholder="123456" autoFocus />
               </Campo>
-              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Entrando…' : 'Entrar'}</Boton>
+              <Campo label="Contraseña nueva" ayuda="Mínimo 8 caracteres. Cuando el celular pregunte si guardarla, decile que sí.">
+                <input type="password" name="new-password" autoComplete="new-password" required minLength={8} value={nueva} onChange={(e) => setNueva(e.target.value)} />
+              </Campo>
+              <Campo label="Repetila">
+                <input type="password" autoComplete="new-password" required minLength={8} value={nueva2} onChange={(e) => setNueva2(e.target.value)} />
+              </Campo>
+              <Boton variante="pri" disabled={estado?.cargando}>{estado?.cargando ? 'Guardando…' : 'Crear contraseña y entrar'}</Boton>
             </form>
             {estado?.error && <p className="error-txt">{estado.error}</p>}
             <button className="enlace" onClick={() => { setEstado(null); setCodigo('') }}>Pedir otro código</button>
