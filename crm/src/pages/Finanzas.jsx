@@ -46,7 +46,9 @@ function Resumen({ mes }) {
         const d = carga.data
         const liquidez = d.saldos.efectivo + d.saldos.banco
         const porCobrar = sumar(d.pendientes, (v) => v.total - v.pagado)
-        const inventario = sumar(d.productos.filter((p) => p.stock > 0), (p) => p.stock * p.costo)
+        const conStock = d.productos.filter((p) => p.stock > 0)
+        const inventario = sumar(conStock, (p) => p.stock * p.costo)
+        const inventarioVenta = sumar(conStock, (p) => p.stock * p.precio)
         const activos = liquidez + porCobrar + inventario
         const porPagar = sumar(d.comprasPend, (c) => c.total - c.pagado) + sumar(d.gastosPend, 'monto')
         const vendido = sumar(d.ventas, 'total')
@@ -82,10 +84,16 @@ function Resumen({ mes }) {
                 <div className="reparto-fila"><span>Inventario al costo</span><b className="num">{colones(inventario)}</b><div className="reparto-barra inv">{barra(inventario)}</div></div>
               </div>
               <div className="estado-cuenta">
-                <Fila titulo="Todo lo que tiene la asociación" derecha={colones(activos)} />
+                <Fila titulo="Todo lo que tiene la asociación" sub="Inventario contado a lo que costó" derecha={colones(activos)} />
                 <Fila titulo="Lo que se debe" sub="Compras y gastos sin pagar" derecha={'−' + colones(porPagar)} tono={porPagar ? 'alerta' : null} />
                 <Fila titulo={<strong>Patrimonio neto</strong>} derecha={<strong>{colones(activos - porPagar)}</strong>} />
               </div>
+              {inventarioVenta > 0 && (
+                <div className="estado-cuenta">
+                  <Fila titulo="Inventario a precio de venta" sub={`${sumar(conStock, 'stock')} unidades en stock`} derecha={colones(inventarioVenta)} />
+                  <Fila titulo="Ganancia esperada si se vende todo" sub={`margen ${Math.round(((inventarioVenta - inventario) / inventarioVenta) * 100)}%`} derecha={<span className="verde">{colones(inventarioVenta - inventario)}</span>} />
+                </div>
+              )}
             </Seccion>
 
             <Seccion titulo={`Resultado de ${nombreMes(mes)}`}>

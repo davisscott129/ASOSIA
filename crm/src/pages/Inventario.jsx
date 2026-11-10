@@ -23,7 +23,9 @@ export default function Inventario() {
     (filtro !== 'servicios' || p.es_servicio) &&
     (filtro !== 'asodita' || p.en_asodita) &&
     (!t || nombreProducto(p).toLowerCase().includes(t) || p.categoria.toLowerCase().includes(t)))
-  const valor = sumar(todos.filter((p) => p.activo && !p.es_servicio && p.stock > 0), (p) => p.stock * p.costo)
+  const enStock = todos.filter((p) => p.activo && !p.es_servicio && p.stock > 0)
+  const valor = sumar(enStock, (p) => p.stock * p.costo)
+  const valorVenta = sumar(enStock, (p) => p.stock * p.precio)
 
   return (
     <Pagina titulo="Inventario" atras="/mas" acciones={esStaff && <Boton variante="pri" onClick={() => setEditando({})}><Plus size={18} /> Nuevo</Boton>}>
@@ -32,7 +34,13 @@ export default function Inventario() {
         <input value={buscar} onChange={(e) => setBuscar(e.target.value)} placeholder="Buscar producto o categoría" aria-label="Buscar producto" />
       </div>
       <Chips opciones={[['todo', 'Todo'], ['bajo', 'Stock bajo'], ['asodita', 'ASOdita'], ['servicios', 'Servicios'], ['inactivos', 'Ocultos']]} valor={filtro} onChange={(f) => setParams(f === 'todo' ? {} : { f })} />
-      {esStaff && <div className="resumen-linea"><span>Inventario valorado al costo</span><strong className="num">{colones(valor)}</strong></div>}
+      {esStaff && carga.data && (
+        <div className="mosaico">
+          <div className="dato"><span className="dato-label">En stock</span><span className="dato-cifra num">{sumar(enStock, 'stock')} u</span><span className="dato-sub">{enStock.length} productos</span></div>
+          <div className="dato"><span className="dato-label">Costó</span><span className="dato-cifra num">{colones(valor)}</span><span className="dato-sub">lo que se pagó</span></div>
+          <div className="dato"><span className="dato-label">Vale a precio de venta</span><span className="dato-cifra num">{colones(valorVenta)}</span><span className="dato-sub verde">ganancia {colones(valorVenta - valor)}</span></div>
+        </div>
+      )}
       <Estado carga={carga}>
         {lista.length ? (
           <Lista>
