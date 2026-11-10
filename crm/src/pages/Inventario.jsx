@@ -86,7 +86,7 @@ function EditarProducto({ producto, categorias, onCerrar, onAjustar, onListo }) 
         </Campo>
         <div className="dos-col">
           <Campo label="Precio de venta (₡)"><input type="number" inputMode="numeric" required value={f.precio} onChange={set('precio', 1)} /></Campo>
-          <Campo label="Costo (₡)" ayuda={nuevo ? null : 'Se recalcula con cada compra'}><input type="number" inputMode="numeric" value={f.costo} onChange={set('costo', 1)} /></Campo>
+          <Campo label="Costo por unidad (₡)" ayuda={nuevo ? 'Lo que te cuesta UNA unidad' : 'Se recalcula con cada compra'}><input type="number" inputMode="numeric" value={f.costo} onChange={set('costo', 1)} /></Campo>
         </div>
         {!f.es_servicio && (
           <div className="dos-col">
@@ -96,7 +96,11 @@ function EditarProducto({ producto, categorias, onCerrar, onAjustar, onListo }) 
             <Campo label="Avisar cuando queden"><input type="number" inputMode="numeric" value={f.stock_minimo} onChange={set('stock_minimo', 1)} /></Campo>
           </div>
         )}
-        {f.precio > 0 && f.costo > 0 && <p className="tenue">Margen: {colones(f.precio - f.costo)} por unidad ({Math.round((1 - f.costo / f.precio) * 100)}%)</p>}
+        <CalculoLote onCosto={(c) => setF({ ...f, costo: c })} />
+        {f.precio > 0 && f.costo > 0 && f.costo <= f.precio && <p className="tenue">Margen: {colones(f.precio - f.costo)} por unidad ({Math.round((1 - f.costo / f.precio) * 100)}%)</p>}
+        {f.precio > 0 && f.costo > f.precio && (
+          <p className="aviso-linea">Ojo: cada unidad cuesta {colones(f.costo)} y se vende en {colones(f.precio)}, así que se pierde {colones(f.costo - f.precio)} por unidad. Si {colones(f.costo)} es lo que pagaste por todo el paquete, usá la calculadora de arriba.</p>
+        )}
         <div className="checks">
           <label><input type="checkbox" checked={f.es_servicio} onChange={set('es_servicio')} /> Es un servicio (no lleva stock)</label>
           <label><input type="checkbox" checked={f.en_asodita} onChange={set('en_asodita')} /> Se vende en la ASOdita</label>
@@ -106,6 +110,23 @@ function EditarProducto({ producto, categorias, onCerrar, onAjustar, onListo }) 
         <Boton variante="pri" disabled={ocupado}>{nuevo ? 'Agregar producto' : 'Guardar cambios'}</Boton>
       </form>
     </Hoja>
+  )
+}
+
+// "Pagué ₡8 700 por 100 unidades" → costo por unidad ₡87
+function CalculoLote({ onCosto }) {
+  const [total, setTotal] = useState('')
+  const [unidades, setUnidades] = useState('')
+  const unit = Number(total) > 0 && Number(unidades) > 0 ? Math.round((Number(total) / Number(unidades)) * 100) / 100 : null
+  return (
+    <div className="lote">
+      <span>¿Compraste un paquete? Pagué</span>
+      <input aria-label="Total pagado por el paquete" type="number" inputMode="numeric" value={total} onChange={(e) => setTotal(num(e.target.value))} placeholder="₡8700" />
+      <span>por</span>
+      <input aria-label="Unidades del paquete" type="number" inputMode="numeric" value={unidades} onChange={(e) => setUnidades(num(e.target.value))} placeholder="100" />
+      <span>unidades</span>
+      {unit != null && <Boton type="button" onClick={() => onCosto(unit)}>Usar {colones(unit)} c/u</Boton>}
+    </div>
   )
 }
 

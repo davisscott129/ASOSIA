@@ -229,6 +229,9 @@ textarea { resize: vertical; }
 .checks label { display: flex; gap: 10px; align-items: center; cursor: pointer; }
 .checks input { width: 18px; height: 18px; accent-color: var(--petroleo); }
 .grande { font-size: 20px; }
+.lote { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 14px; color: var(--tenue); padding: 10px 12px; background: #f4f8f9; border-radius: var(--radio-sm); }
+.lote input { width: 96px; min-height: 38px; padding: 6px 10px; }
+.lote .btn { min-height: 38px; padding: 6px 12px; }
 
 .segmento { display: flex; background: #e1eaed; border-radius: 12px; padding: 3px; gap: 2px; }
 .segmento button { flex: 1; border: 0; background: none; border-radius: 9px; padding: 8px 6px; font-weight: 600; font-size: 14px; color: var(--tenue); cursor: pointer; min-height: 38px; }
