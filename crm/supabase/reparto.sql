@@ -279,3 +279,68 @@ $$;
 
 revoke execute on all functions in schema public from anon, public;
 grant execute on all functions in schema public to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Compra al por mayor: costo_total + unidades, precio de venta y producto nuevo
+-- (reemplaza registrar_compra de schema.sql)
+-- ---------------------------------------------------------------------
+create or replace function registrar_compra(p jsonb) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare
+  v_id bigint; it jsonb; prod productos; v_cant numeric; v_costo numeric; v_linea numeric; v_total numeric := 0;
+  v_pago numeric := coalesce((p->>'pago')::numeric, 0);
+  v_cuenta text := coalesce(p->>'cuenta', 'efectivo');
+  v_precio numeric;
+begin
+  if not es_staff() then raise exception 'Sin permiso'; end if;
+  if jsonb_array_length(coalesce(p->'items', '[]'::jsonb)) = 0 then raise exception 'La compra no tiene productos'; end if;
+  insert into compras (fecha, proveedor_id, evento_id, notas, creado_por)
+  values (coalesce((p->>'fecha')::date, current_date), (p->>'proveedor_id')::bigint,
+          (p->>'evento_id')::bigint, p->>'notas', auth.jwt()->>'email')
+  returning id into v_id;
+  for it in select * from jsonb_array_elements(p->'items') loop
+    v_cant := (it->>'cantidad')::numeric;
+    if v_cant is null or v_cant <= 0 then raise exception 'Cantidad inválida'; end if;
+    v_precio := nullif(it->>'precio', '')::numeric;
+    if it ? 'nuevo' then
+      if coalesce(trim(it->'nuevo'->>'nombre'), '') = '' then raise exception 'Falta el nombre del producto nuevo'; end if;
+      insert into productos (nombre, variante, categoria, precio, costo, stock)
+      values (trim(it->'nuevo'->>'nombre'), nullif(trim(it->'nuevo'->>'variante'), ''),
+              coalesce(nullif(trim(it->'nuevo'->>'categoria'), ''), 'General'), coalesce(v_precio, 0), 0, 0)
+      returning * into prod;
+    else
+      select * into prod from productos where id = (it->>'producto_id')::bigint for update;
+      if not found then raise exception 'Un producto ya no existe'; end if;
+    end if;
+    if it ? 'costo_total' then
+      v_linea := (it->>'costo_total')::numeric;
+      v_costo := round(v_linea / v_cant, 2);
+    else
+      v_costo := (it->>'costo')::numeric;
+      v_linea := v_cant * v_costo;
+    end if;
+    if v_linea is null or v_linea < 0 then raise exception 'Costo inválido'; end if;
+    insert into compra_items (compra_id, producto_id, nombre, cantidad, costo)
+    values (v_id, prod.id, prod.nombre || coalesce(' · ' || prod.variante, ''), v_cant, v_costo);
+    update productos set
+      costo = case when greatest(stock, 0) + v_cant > 0
+                   then round((greatest(stock, 0) * costo + v_linea) / (greatest(stock, 0) + v_cant), 2)
+                   else v_costo end,
+      stock = stock + v_cant,
+      precio = coalesce(v_precio, precio)
+    where id = prod.id;
+    v_total := v_total + v_linea;
+  end loop;
+  v_pago := least(greatest(v_pago, 0), v_total);
+  update compras set total = v_total, pagado = v_pago,
+         estado = case when v_pago >= v_total then 'pagada' else 'pendiente' end
+  where id = v_id;
+  if v_pago > 0 then
+    insert into movimientos (cuenta, monto, tipo, compra_id, nota, creado_por)
+    values (v_cuenta, -v_pago, 'compra', v_id, 'Compra #' || v_id, auth.jwt()->>'email');
+  end if;
+  return v_id;
+end $$;
+
+revoke execute on all functions in schema public from anon, public;
+grant execute on all functions in schema public to authenticated;
