@@ -17,7 +17,7 @@ create table if not exists autorizados (
   creado_at  timestamptz not null default now()
 );
 
-create or replace function _normalizar_email() returns trigger language plpgsql as $$
+create or replace function _normalizar_email() returns trigger language plpgsql set search_path = public as $$
 begin
   new.email := lower(trim(new.email));
   return new;
@@ -28,7 +28,7 @@ create trigger t_autorizados_email before insert or update on autorizados
   for each row execute function _normalizar_email();
 
 -- Siempre debe quedar al menos un admin activo
-create or replace function _proteger_ultimo_admin() returns trigger language plpgsql as $$
+create or replace function _proteger_ultimo_admin() returns trigger language plpgsql set search_path = public as $$
 begin
   if old.rol = 'admin' and old.activo
      and (tg_op = 'DELETE' or new.rol <> 'admin' or not new.activo)
@@ -50,13 +50,13 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create or replace function tiene_acceso() returns boolean
-language sql stable as $$ select public.mi_rol() is not null $$;
+language sql stable set search_path = public as $$ select public.mi_rol() is not null $$;
 
 create or replace function es_staff() returns boolean
-language sql stable as $$ select coalesce(public.mi_rol() in ('admin','manager'), false) $$;
+language sql stable set search_path = public as $$ select coalesce(public.mi_rol() in ('admin','manager'), false) $$;
 
 create or replace function es_admin() returns boolean
-language sql stable as $$ select coalesce(public.mi_rol() = 'admin', false) $$;
+language sql stable set search_path = public as $$ select coalesce(public.mi_rol() = 'admin', false) $$;
 
 -- Lo que la app pide al entrar: ¿quién soy y qué rol tengo?
 create or replace function mi_perfil() returns json
@@ -538,3 +538,57 @@ grant select on catalogo_web to anon, authenticated;
 insert into autorizados (email, nombre, rol) values
   ('junta.asosia@gmail.com', 'Junta Directiva ASOSIA', 'admin')
 on conflict (email) do nothing;
+
+-- ---------------------------------------------------------------------
+-- 8. Ajustes de seguridad y rendimiento (avisos de Supabase)
+-- ---------------------------------------------------------------------
+-- Catálogo público: corre con permisos del visitante; anon solo ve columnas seguras de productos visibles
+alter view catalogo_web set (security_invoker = true);
+revoke all on productos from anon;
+grant select (id, nombre, variante, categoria, precio, stock, es_servicio, activo, visible_web) on productos to anon;
+drop policy if exists p_prod_web on productos;
+create policy p_prod_web on productos for select to anon using (activo and visible_web);
+
+-- Una política por acción
+drop policy if exists p_aut_all on autorizados;
+drop policy if exists p_aut_sel on autorizados;
+create policy p_aut_sel on autorizados for select to authenticated
+  using ((select es_admin()) or email = lower((select auth.jwt()) ->> 'email'));
+drop policy if exists p_aut_ins on autorizados;
+create policy p_aut_ins on autorizados for insert to authenticated with check ((select es_admin()));
+drop policy if exists p_aut_upd on autorizados;
+create policy p_aut_upd on autorizados for update to authenticated using ((select es_admin())) with check ((select es_admin()));
+drop policy if exists p_aut_del on autorizados;
+create policy p_aut_del on autorizados for delete to authenticated using ((select es_admin()));
+
+drop policy if exists p_prod_all on productos;
+drop policy if exists p_prod_ins on productos;
+create policy p_prod_ins on productos for insert to authenticated with check ((select es_staff()));
+drop policy if exists p_prod_upd on productos;
+create policy p_prod_upd on productos for update to authenticated using ((select es_staff())) with check ((select es_staff()));
+drop policy if exists p_prod_del on productos;
+create policy p_prod_del on productos for delete to authenticated using ((select es_staff()));
+
+drop policy if exists p_ev_all on eventos;
+drop policy if exists p_ev_ins on eventos;
+create policy p_ev_ins on eventos for insert to authenticated with check ((select es_staff()));
+drop policy if exists p_ev_upd on eventos;
+create policy p_ev_upd on eventos for update to authenticated using ((select es_staff())) with check ((select es_staff()));
+drop policy if exists p_ev_del on eventos;
+create policy p_ev_del on eventos for delete to authenticated using ((select es_staff()));
+
+create index if not exists i_aj_evento on ajustes_stock(evento_id);
+create index if not exists i_aj_producto on ajustes_stock(producto_id);
+create index if not exists i_ci_compra on compra_items(compra_id);
+create index if not exists i_ci_producto on compra_items(producto_id);
+create index if not exists i_compras_evento on compras(evento_id);
+create index if not exists i_compras_proveedor on compras(proveedor_id);
+create index if not exists i_gastos_evento on gastos(evento_id);
+create index if not exists i_gastos_proveedor on gastos(proveedor_id);
+create index if not exists i_mov_compra on movimientos(compra_id);
+create index if not exists i_mov_gasto on movimientos(gasto_id);
+create index if not exists i_mov_venta on movimientos(venta_id);
+create index if not exists i_vi_producto on venta_items(producto_id);
+create index if not exists i_vi_venta on venta_items(venta_id);
+create index if not exists i_ventas_cliente on ventas(cliente_id);
+create index if not exists i_ventas_evento on ventas(evento_id);
